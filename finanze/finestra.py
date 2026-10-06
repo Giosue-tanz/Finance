@@ -4,8 +4,10 @@ from __future__ import annotations
 import os
 
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QAction, QIcon, QKeySequence, QShortcut
-from PySide6.QtWidgets import (QButtonGroup, QHBoxLayout, QLabel, QMainWindow,
+from PySide6.QtGui import (QAction, QColor, QIcon, QKeySequence, QPalette,
+                           QShortcut)
+from PySide6.QtWidgets import (QApplication, QButtonGroup, QHBoxLayout, QLabel,
+                               QMainWindow,
                                QMessageBox, QPushButton, QStackedWidget,
                                QStatusBar, QVBoxLayout, QWidget)
 
@@ -187,9 +189,32 @@ class FinestraPrincipale(QMainWindow):
         self.db.imposta("tema", nuovo)
         self.applica_tema(nuovo)
 
+    @staticmethod
+    def _palette(c: dict) -> QPalette:
+        """Palette Qt coerente col tema: serve ai widget che non passano dal QSS
+        (righe alternate, selezioni, testo segnaposto)."""
+        p = QPalette()
+        p.setColor(QPalette.Window, QColor(c["fondo"]))
+        p.setColor(QPalette.WindowText, QColor(c["testo"]))
+        p.setColor(QPalette.Base, QColor(c["pannello"]))
+        p.setColor(QPalette.AlternateBase, QColor(c["pannello2"]))
+        p.setColor(QPalette.Text, QColor(c["testo"]))
+        p.setColor(QPalette.PlaceholderText, QColor(c["testo2"]))
+        p.setColor(QPalette.Button, QColor(c["pannello2"]))
+        p.setColor(QPalette.ButtonText, QColor(c["testo"]))
+        p.setColor(QPalette.ToolTipBase, QColor(c["pannello2"]))
+        p.setColor(QPalette.ToolTipText, QColor(c["testo"]))
+        p.setColor(QPalette.Highlight, QColor(c["accento"]))
+        p.setColor(QPalette.HighlightedText, QColor("#ffffff"))
+        p.setColor(QPalette.Link, QColor(c["accento"]))
+        return p
+
     def applica_tema(self, nome: str) -> None:
         self.c = SCURO if nome == "scuro" else CHIARO
         scala = SCALE.get(self.db.leggi("scala", "normale"), 1.0)
+        app = QApplication.instance()
+        if app is not None:
+            app.setPalette(self._palette(self.c))
         self.setStyleSheet(foglio_stile(self.c, scala))
         for vista in self.viste:
             vista.aggiorna_tema(self.c)

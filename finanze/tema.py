@@ -39,10 +39,21 @@ PALETTE_GRAFICI = [
 SCALE = {"compatta": 0.9, "normale": 1.0, "grande": 1.15, "molto grande": 1.3}
 
 
+def trasparente(colore: str, opacita: float) -> str:
+    """Converte #rrggbb in rgba(): in Qt l'esadecimale a 8 cifre è #AARRGGBB,
+    quindi scriverlo a mano porta a colori sbagliati."""
+    colore = colore.lstrip("#")
+    r, v, b = (int(colore[i:i + 2], 16) for i in (0, 2, 4))
+    return f"rgba({r}, {v}, {b}, {opacita:.2f})"
+
+
 def foglio_stile(c: dict, scala: float = 1.0) -> str:
     def p(px: float) -> str:
         """Dimensione in pixel adattata alla scala del testo."""
         return f"{px * scala:.1f}px"
+
+    selezione = trasparente(c["accento"], 0.33)
+    velo = trasparente("#ffffff", 0.22)
 
     return f"""
     * {{ font-family: "Inter", "Noto Sans", "Segoe UI", sans-serif; font-size: {p(13)}; }}
@@ -83,7 +94,7 @@ def foglio_stile(c: dict, scala: float = 1.0) -> str:
     QPushButton#Primario {{
         background: {c['accento']}; color: #ffffff; border: none; font-weight: 600;
     }}
-    QPushButton#Primario:hover {{ background: {c['accento']}; border: 1px solid #ffffff33; }}
+    QPushButton#Primario:hover {{ background: {c['accento']}; border: 1px solid {velo}; }}
     QPushButton#Pericolo {{ background: {c['uscita']}; color: #ffffff; border: none; }}
 
     QLineEdit, QComboBox, QDateEdit, QDoubleSpinBox, QSpinBox, QTextEdit, QPlainTextEdit {{
@@ -116,8 +127,8 @@ def foglio_stile(c: dict, scala: float = 1.0) -> str:
 
     QTableWidget, QTableView {{
         background: {c['pannello']}; border: 1px solid {c['bordo']}; border-radius: 12px;
-        gridline-color: {c['griglia']}; selection-background-color: {c['accento']}44;
-        selection-color: {c['testo']};
+        gridline-color: {c['griglia']}; selection-background-color: {selezione};
+        selection-color: {c['testo']}; alternate-background-color: {c['pannello2']};
     }}
     QHeaderView::section {{
         background: {c['pannello2']}; color: {c['testo2']}; border: none;

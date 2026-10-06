@@ -54,7 +54,7 @@ su GitHub.
 | Sezione | Cosa fa |
 |---|---|
 | **Cruscotto** | Saldo, entrate/uscite del mese, andamento a 12 mesi, ripartizione per categoria, stato dei budget, ultimi movimenti |
-| **Movimenti** | Registro completo: inserimento, modifica, duplicazione, eliminazione multipla, filtri per periodo/tipo/categoria/conto, ricerca testuale, import ed export CSV |
+| **Movimenti** | Barra di inserimento rapido (importo + Invio), filtri a un clic (oggi, 7 giorni, mese, anno, tutto, intervallo), ricerca istantanea, menu contestuale, eliminazione annullabile con Ctrl+Z, ordinamento per data e importo reali, import ed export CSV |
 | **Budget** | Limite di spesa mensile per categoria, avanzamento con semaforo, confronto limite/spesa effettiva |
 | **Obiettivi** | Traguardi di risparmio con avanzamento, accantonamenti e quota mensile necessaria per rispettare la scadenza |
 | **Ricorrenti** | Canoni, stipendi e abbonamenti: generazione automatica dei movimenti dovuti, flusso fisso netto normalizzato su base mensile |
@@ -66,7 +66,11 @@ su GitHub.
 
 | Tasti | Azione |
 |---|---|
-| `Ctrl+N` | Nuovo movimento |
+| `Ctrl+N` | Nuovo movimento (finestra completa) |
+| `Invio` nella barra rapida | Salva il movimento e resta pronto per il successivo |
+| `Ctrl+F` | Vai alla ricerca |
+| `Ctrl+D` | Duplica il movimento selezionato a oggi |
+| `Ctrl+Z` | Annulla l'ultima eliminazione |
 | `Ctrl+1` … `Ctrl+8` | Passa alla sezione corrispondente |
 | `Ctrl+R` | Ricarica la vista corrente |
 | `Ctrl+T` | Cambia tema chiaro/scuro |
