@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS categorie (
     nome TEXT NOT NULL,
     tipo TEXT NOT NULL,            -- 'entrata' | 'uscita'
     colore TEXT NOT NULL DEFAULT '#6c8cff',
+    icona TEXT NOT NULL DEFAULT '',
     UNIQUE(nome, tipo)
 );
 CREATE TABLE IF NOT EXISTS movimenti (
@@ -94,18 +95,18 @@ CREATE INDEX IF NOT EXISTS idx_mov_cat ON movimenti(categoria);
 """
 
 CATEGORIE_DEFAULT = [
-    ("Stipendio", "entrata", "#2fbf71"),
-    ("Rimborsi", "entrata", "#4cc9a4"),
-    ("Investimenti", "entrata", "#86d39b"),
-    ("Altre entrate", "entrata", "#b7e4c7"),
-    ("Casa", "uscita", "#ef6f6c"),
-    ("Spesa alimentare", "uscita", "#f2994a"),
-    ("Trasporti", "uscita", "#f2c14e"),
-    ("Bollette", "uscita", "#c77dff"),
-    ("Salute", "uscita", "#56cfe1"),
-    ("Tempo libero", "uscita", "#ff9ecd"),
-    ("Istruzione", "uscita", "#7f8cff"),
-    ("Altro", "uscita", "#9aa0a6"),
+    ("Stipendio", "entrata", "#2fbf71", "💼"),
+    ("Rimborsi", "entrata", "#4cc9a4", "💸"),
+    ("Investimenti", "entrata", "#86d39b", "📈"),
+    ("Altre entrate", "entrata", "#b7e4c7", "💰"),
+    ("Casa", "uscita", "#ef6f6c", "🏠"),
+    ("Spesa alimentare", "uscita", "#f2994a", "🛒"),
+    ("Trasporti", "uscita", "#f2c14e", "🚗"),
+    ("Bollette", "uscita", "#c77dff", "💡"),
+    ("Salute", "uscita", "#56cfe1", "💊"),
+    ("Tempo libero", "uscita", "#ff9ecd", "🎬"),
+    ("Istruzione", "uscita", "#7f8cff", "📚"),
+    ("Altro", "uscita", "#9aa0a6", "🏷"),
 ]
 
 
@@ -119,15 +120,34 @@ class Database:
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON")
         self.conn.executescript(SCHEMA)
+        self._aggiorna_schema()
         self._semina()
         self.conn.commit()
 
     # ------------------------------------------------------------------ base
+    def _aggiorna_schema(self) -> None:
+        """Aggiunge le colonne introdotte dalle versioni successive.
+
+        Permette di aggiornare l'applicazione senza perdere né convertire i dati.
+        """
+        colonne = {r["name"] for r in self.conn.execute("PRAGMA table_info(categorie)")}
+        if "icona" not in colonne:
+            self.conn.execute(
+                "ALTER TABLE categorie ADD COLUMN icona TEXT NOT NULL DEFAULT ''")
+            from .icone import icona_suggerita
+            ufficiali = {(n, t): i for n, t, _, i in CATEGORIE_DEFAULT}
+            for r in self.conn.execute("SELECT id, nome, tipo FROM categorie").fetchall():
+                icona = (ufficiali.get((r["nome"], r["tipo"]))
+                         or icona_suggerita(r["nome"], r["tipo"]))
+                self.conn.execute(
+                    "UPDATE categorie SET icona=? WHERE id=?", (icona, r["id"]))
+            self.conn.commit()
+
     def _semina(self) -> None:
         cur = self.conn.execute("SELECT COUNT(*) c FROM categorie")
         if cur.fetchone()["c"] == 0:
             self.conn.executemany(
-                "INSERT INTO categorie(nome, tipo, colore) VALUES (?,?,?)",
+                "INSERT INTO categorie(nome, tipo, colore, icona) VALUES (?,?,?,?)",
                 CATEGORIE_DEFAULT,
             )
         cur = self.conn.execute("SELECT COUNT(*) c FROM conti")
@@ -246,6 +266,10 @@ class Database:
 
     def colori_categorie(self) -> dict[str, str]:
         return {r["nome"]: r["colore"] for r in self.query("SELECT nome, colore FROM categorie")}
+
+    def icone_categorie(self) -> dict[str, str]:
+        return {r["nome"]: r["icona"]
+                for r in self.query("SELECT nome, icona FROM categorie")}
 
     # ------------------------------------------------------------- ricorrenti
     def genera_ricorrenti(self) -> int:

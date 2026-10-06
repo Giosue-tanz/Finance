@@ -60,7 +60,7 @@ su GitHub.
 | **Ricorrenti** | Canoni, stipendi e abbonamenti: generazione automatica dei movimenti dovuti, flusso fisso netto normalizzato su base mensile |
 | **Rapporti** | Analisi per periodo: ripartizioni, classifica delle categorie, risparmio netto mensile, dettaglio per categoria e riepilogo mese per mese |
 | **Strumenti** | Calcolatrici: prestito/mutuo con piano di ammortamento, interesse composto, piano di risparmio, regola 50/30/20, IVA e sconti, divisione spese |
-| **Impostazioni** | Quattro schede: **Conti** (aggiunta rapida, modifica, rinomina con aggiornamento dei movimenti, eliminazione con spostamento dei movimenti), **Categorie** (filtri entrate/uscite, ricerca, colori, unione di categorie), **Aspetto** (tema, dimensione del testo, valuta — applicati subito), **Dati e backup** (riepilogo archivio, backup immediato, ripristino, import/export, operazioni protette) |
+| **Impostazioni** | Quattro schede: **Conti** (aggiunta rapida, modifica, rinomina con aggiornamento dei movimenti, eliminazione con spostamento dei movimenti), **Categorie** (filtri entrate/uscite, ricerca, icone, colori, unione di categorie), **Aspetto** (tema, dimensione del testo, valuta — applicati subito), **Dati e backup** (riepilogo archivio, backup immediato, ripristino, import/export, operazioni protette) |
 
 ## Scorciatoie
 
@@ -120,9 +120,13 @@ La pagina è divisa in quattro schede, così ogni comando è a un clic di distan
 - **Conti** — campo di aggiunta rapida (scrivi il nome e premi Invio), doppio clic su
   una riga per modificarla, rinomina che aggiorna automaticamente i movimenti
   collegati, eliminazione che chiede su quale conto spostare i movimenti esistenti.
-- **Categorie** — filtri *Tutte / Uscite / Entrate*, ricerca per nome, colore visibile
-  in tabella, conteggio dei movimenti per categoria, **Unisci in…** per spostare tutti
-  i movimenti in un'altra categoria ed eliminare quella vecchia in un solo passaggio.
+- **Categorie** — filtri *Tutte / Uscite / Entrate*, ricerca per nome, **icona** e colore
+  visibili in tabella, conteggio dei movimenti per categoria, **Unisci in…** per spostare
+  tutti i movimenti in un'altra categoria ed eliminare quella vecchia in un solo passaggio.
+  Ogni categoria ha un'icona: creandone una nuova l'app ne propone una in base al nome
+  («Benzina» → ⛽, «Netflix» → 📺, «Dentista» → 🦷) e il pulsante *Icona rapida* apre una
+  griglia di 82 icone divise per argomento. Le icone compaiono poi in tutta
+  l'applicazione: movimenti, budget, grafici e rapporti.
 - **Aspetto** — tema chiaro/scuro, dimensione del testo (compatta, normale, grande,
   molto grande) e simbolo di valuta con anteprima: tutto si applica immediatamente
   all'intera applicazione.

@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QComboBox, QDoubleSpinBox,
 
 from ..componenti import Scheda, SchedaStat, etichetta, riga
 from ..grafici import GraficoBarre
+from ..icone import etichetta_categoria
 from ..utils import euro, mese_corrente
 from . import VistaBase
 
@@ -72,14 +73,16 @@ class VistaBudget(VistaBase):
     def aggiorna(self) -> None:
         v = self.valuta
         dal, al = mese_corrente()
-        testo = self.cmb_categoria.currentText()
+        scelta = self.cmb_categoria.currentData()
         self.cmb_categoria.clear()
-        self.cmb_categoria.addItems([r["nome"] for r in self.db.query(
-            "SELECT nome FROM categorie WHERE tipo='uscita' ORDER BY nome")])
-        idx = self.cmb_categoria.findText(testo)
+        for r in self.db.query(
+                "SELECT nome, icona FROM categorie WHERE tipo='uscita' ORDER BY nome"):
+            self.cmb_categoria.addItem(etichetta_categoria(r["nome"], r["icona"]), r["nome"])
+        idx = self.cmb_categoria.findData(scelta) if scelta else -1
         if idx >= 0:
             self.cmb_categoria.setCurrentIndex(idx)
 
+        icone = self.db.icone_categorie()
         righe = self.db.query("SELECT * FROM budget ORDER BY mensile DESC")
         self.tab.setRowCount(len(righe))
         tot_limite = tot_speso = 0.0
@@ -97,7 +100,8 @@ class VistaBudget(VistaBase):
             colore = (self.c["entrata"] if quota < 75 else
                       self.c["attenzione"] if quota < 100 else self.c["uscita"])
 
-            it_cat = QTableWidgetItem(b["categoria"])
+            it_cat = QTableWidgetItem(
+                etichetta_categoria(b["categoria"], icone.get(b["categoria"])))
             it_cat.setData(Qt.UserRole, b["id"])
             self.tab.setItem(r, 0, it_cat)
             for col, val, col_testo in ((1, limite, None), (2, speso, colore),
@@ -125,7 +129,7 @@ class VistaBudget(VistaBase):
                                   [("Limite", self.c["accento"]), ("Speso", self.c["uscita"])])
 
     def salva(self) -> None:
-        cat = self.cmb_categoria.currentText().strip()
+        cat = (self.cmb_categoria.currentData() or "").strip()
         if not cat:
             return
         self.db.esegui(

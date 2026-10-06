@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QComboBox, QDateEdit, QHeaderV
 
 from ..componenti import Scheda, SchedaStat, etichetta, riga
 from ..grafici import GraficoBarre, GraficoCiambella, GraficoLinea
+from ..icone import etichetta_categoria
 from ..utils import (anno_corrente, data_it, etichetta_mese, euro, mese_corrente,
                      mese_precedente)
 from . import VistaBase
@@ -128,6 +129,7 @@ class VistaRapporti(VistaBase):
         dal, al = self._intervallo()
         ent, usc = self.db.totali_periodo(dal, al)
         colori = self.db.colori_categorie()
+        icone = self.db.icone_categorie()
 
         mesi = max(1, self._mesi_tra(dal, al))
         self.s_entrate.imposta(ent, f"su {mesi} mesi · media {euro(ent/mesi, v)}", v)
@@ -138,12 +140,14 @@ class VistaRapporti(VistaBase):
 
         cat_u = self.db.per_categoria("uscita", dal, al)
         cat_e = self.db.per_categoria("entrata", dal, al)
-        self.g_uscite.imposta_dati([(n, t, colori.get(n, "")) for n, t in cat_u],
+        self.g_uscite.imposta_dati(
+            [(etichetta_categoria(n, icone.get(n)), t, colori.get(n, "")) for n, t in cat_u],
                                    euro(usc, v).replace(f" {v}", ""), "uscite")
-        self.g_entrate.imposta_dati([(n, t, colori.get(n, "")) for n, t in cat_e],
+        self.g_entrate.imposta_dati(
+            [(etichetta_categoria(n, icone.get(n)), t, colori.get(n, "")) for n, t in cat_e],
                                     euro(ent, v).replace(f" {v}", ""), "entrate")
         self.g_classifica.imposta_dati(
-            [(n, [t]) for n, t in cat_u[:12]],
+            [(etichetta_categoria(n, icone.get(n)), [t]) for n, t in cat_u[:12]],
             [(n, colori.get(n, "")) for n, _ in cat_u[:12]])
 
         serie = self.db.query(
@@ -156,7 +160,7 @@ class VistaRapporti(VistaBase):
             [(etichetta_mese(r["m"]), float(r["e"]) - float(r["u"])) for r in serie],
             self.c["attenzione"])
 
-        self._tabella_categorie(dal, al, ent, usc)
+        self._tabella_categorie(dal, al, ent, usc, icone)
         self._tabella_mesi(serie)
 
     @staticmethod
@@ -168,7 +172,7 @@ class VistaRapporti(VistaBase):
         except ValueError:
             return 1
 
-    def _tabella_categorie(self, dal, al, ent, usc) -> None:
+    def _tabella_categorie(self, dal, al, ent, usc, icone) -> None:
         v = self.valuta
         righe = self.db.query(
             "SELECT categoria, tipo, COUNT(*) n, SUM(importo) tot, AVG(importo) med "
@@ -179,7 +183,8 @@ class VistaRapporti(VistaBase):
         for r, x in enumerate(righe):
             base = ent if x["tipo"] == "entrata" else usc
             quota = float(x["tot"]) / base * 100 if base else 0
-            valori = [x["categoria"], x["tipo"], str(x["n"]),
+            valori = [etichetta_categoria(x["categoria"], icone.get(x["categoria"])),
+                      x["tipo"], str(x["n"]),
                       euro(float(x["tot"]), v), euro(float(x["med"]), v), f"{quota:.1f}%"]
             for col, t in enumerate(valori):
                 it = QTableWidgetItem(t)

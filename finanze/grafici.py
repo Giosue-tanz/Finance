@@ -208,7 +208,7 @@ class GraficoBarre(BaseGrafico):
             colore = self.serie[i][1] if i < len(self.serie) else PALETTE_GRAFICI[i % 12]
             p.setPen(QColor(self.c["testo"]))
             p.drawText(QRectF(4, y - 3, ml - 12, h + 6),
-                       Qt.AlignRight | Qt.AlignVCenter, etic[:20])
+                       Qt.AlignRight | Qt.AlignVCenter, etic[:24])
             larghezza = max(2.0, (v / massimo) * area.width())
             rect = QRectF(area.left(), y, larghezza, h)
             p.setPen(Qt.NoPen); p.setBrush(QColor(colore))
@@ -274,7 +274,7 @@ class GraficoCiambella(BaseGrafico):
             p.drawRoundedRect(QRectF(x, y + 4, 10, 10), 3, 3)
             p.setPen(QColor(self.c["testo"]))
             quota = valore / totale * 100
-            testo = f"{nome[:18]}  ·  {quota:.0f}%"
+            testo = f"{nome[:22]}  ·  {quota:.0f}%"
             p.drawText(QRectF(x + 16, y, max(40.0, self.width() - x - 24), 18),
                        Qt.AlignLeft | Qt.AlignVCenter, testo)
             self._zone.append((QRectF(x, y, self.width() - x, 20),

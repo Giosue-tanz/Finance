@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (QComboBox, QDateEdit, QDialog, QDialogButtonBox,
                                QVBoxLayout, QWidget)
 
 from .grafici import Sparkline
+from .icone import etichetta_categoria, solo_nome
 from .utils import euro
 
 
@@ -99,6 +100,7 @@ class DialogoMovimento(QDialog):
                  movimento=None, parent=None):
         super().__init__(parent)
         self.db = db
+        self.icone = db.icone_categorie()
         self.movimento = dict(movimento) if movimento else None
         self.cat_entrata = categorie_entrata
         self.cat_uscita = categorie_uscita
@@ -153,17 +155,22 @@ class DialogoMovimento(QDialog):
             a, me, g = (int(x) for x in m["data"].split("-"))
             self.data.setDate(QDate(a, me, g))
             self.importo.setValue(float(m["importo"]))
-            self.categoria.setCurrentText(m["categoria"])
+            idx = self.categoria.findData(m["categoria"])
+            if idx >= 0:
+                self.categoria.setCurrentIndex(idx)
+            else:
+                self.categoria.setCurrentText(m["categoria"])
             self.conto.setCurrentText(m["conto"])
             self.descrizione.setText(m["descrizione"])
             self.etichette.setText(m["etichette"])
 
     def _aggiorna_categorie(self, tipo: str) -> None:
-        corrente = self.categoria.currentText()
+        corrente = self.categoria.currentData() or solo_nome(self.categoria.currentText())
         self.categoria.clear()
-        self.categoria.addItems(self.cat_entrata if tipo == "entrata" else self.cat_uscita)
+        for nome in (self.cat_entrata if tipo == "entrata" else self.cat_uscita):
+            self.categoria.addItem(etichetta_categoria(nome, self.icone.get(nome)), nome)
         if corrente:
-            idx = self.categoria.findText(corrente)
+            idx = self.categoria.findData(corrente)
             if idx >= 0:
                 self.categoria.setCurrentIndex(idx)
 
@@ -173,7 +180,12 @@ class DialogoMovimento(QDialog):
             "data": self.data.date().toString("yyyy-MM-dd"),
             "tipo": self.tipo.currentText(),
             "importo": self.importo.value(),
-            "categoria": self.categoria.currentText().strip() or "Altro",
+            "categoria": (self.categoria.currentData()
+                          if self.categoria.currentData()
+                          and self.categoria.currentText() ==
+                          etichetta_categoria(self.categoria.currentData(),
+                                              self.icone.get(self.categoria.currentData()))
+                          else solo_nome(self.categoria.currentText())) or "Altro",
             "conto": self.conto.currentText().strip() or "Principale",
             "descrizione": self.descrizione.text().strip(),
             "etichette": self.etichette.text().strip(),

@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QColorDialog,
                                QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget)
 
 from ..componenti import Scheda, etichetta, riga
+from ..icone import ICONA_PREDEFINITA, SelettoreIcona, icona_suggerita
 from ..tema import PALETTE_GRAFICI, SCALE
 from ..utils import data_it, esporta_csv, euro, importa_csv
 from . import VistaBase
@@ -79,6 +80,7 @@ class DialogoCategoria(QDialog):
         super().__init__(parent)
         self.categoria = dict(categoria) if categoria else None
         self.colore = (self.categoria or {}).get("colore", PALETTE_GRAFICI[0])
+        self.icona = (self.categoria or {}).get("icona", "") or ICONA_PREDEFINITA
         self.setWindowTitle("Modifica categoria" if categoria else "Nuova categoria")
         self.setMinimumWidth(380)
 
@@ -87,10 +89,14 @@ class DialogoCategoria(QDialog):
         self.tipo = QComboBox(); self.tipo.addItems(["uscita", "entrata"])
         self.b_colore = QPushButton("Scegli colore")
         self.b_colore.clicked.connect(self._scegli_colore)
+        self.b_icona = QPushButton()
+        self.b_icona.setStyleSheet("font-size: 20px;")
+        self.b_icona.clicked.connect(self._scegli_icona)
 
         modulo = QFormLayout(); modulo.setSpacing(10)
         modulo.addRow("Nome", self.nome)
         modulo.addRow("Tipo", self.tipo)
+        modulo.addRow("Icona", self.b_icona)
         modulo.addRow("Colore", self.b_colore)
 
         bb = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
@@ -105,8 +111,27 @@ class DialogoCategoria(QDialog):
         if self.categoria:
             self.nome.setText(self.categoria["nome"])
             self.tipo.setCurrentText(self.categoria["tipo"])
+        else:
+            # per una categoria nuova l'icona segue il nome che stai scrivendo
+            self.nome.textEdited.connect(self._proponi_icona)
         self._mostra_colore()
+        self._mostra_icona()
         self.nome.setFocus()
+
+    def _proponi_icona(self, testo: str) -> None:
+        if not getattr(self, "_icona_scelta_a_mano", False):
+            self.icona = icona_suggerita(testo, self.tipo.currentText())
+            self._mostra_icona()
+
+    def _scegli_icona(self) -> None:
+        dlg = SelettoreIcona(self.icona, self)
+        if dlg.exec():
+            self.icona = dlg.scelta
+            self._icona_scelta_a_mano = True
+            self._mostra_icona()
+
+    def _mostra_icona(self) -> None:
+        self.b_icona.setText(f"  {self.icona}    cambia…")
 
     def _scegli_colore(self) -> None:
         scelto = QColorDialog.getColor(QColor(self.colore), self, "Colore categoria")
@@ -122,7 +147,8 @@ class DialogoCategoria(QDialog):
     def dati(self) -> dict:
         return {"nome": self.nome.text().strip(),
                 "tipo": self.tipo.currentText(),
-                "colore": self.colore}
+                "colore": self.colore,
+                "icona": self.icona}
 
 
 # ------------------------------------------------------------------ vista
@@ -235,25 +261,28 @@ class VistaImpostazioni(VistaBase):
         barra_filtri.addWidget(self.cerca_cat)
         sc_tab.aggiungi_layout(barra_filtri)
 
-        self.tab_cat = QTableWidget(0, 4)
-        self.tab_cat.setHorizontalHeaderLabels(["Categoria", "Tipo", "Colore", "Movimenti"])
-        self._prepara_tabella(self.tab_cat, larghezza_prima=260)
+        self.tab_cat = QTableWidget(0, 5)
+        self.tab_cat.setHorizontalHeaderLabels(
+            ["Icona", "Categoria", "Tipo", "Colore", "Movimenti"])
+        self._prepara_tabella(self.tab_cat, larghezza_prima=70)
         self.tab_cat.doubleClicked.connect(self.modifica_categoria)
         sc_tab.aggiungi(self.tab_cat)
 
         b_mod = QPushButton("Modifica")
+        b_icona = QPushButton("Icona rapida")
         b_colore = QPushButton("Colore rapido")
         b_unisci = QPushButton("Unisci in…")
         b_del = QPushButton("Elimina"); b_del.setObjectName("Pericolo")
-        nota = QLabel("Doppio clic per modificare nome, tipo e colore. "
+        nota = QLabel("Doppio clic per modificare nome, icona, tipo e colore. "
                       "«Unisci» sposta tutti i movimenti in un'altra categoria.")
         nota.setObjectName("NotaScheda")
-        sc_tab.aggiungi_layout(riga(b_mod, b_colore, b_unisci, b_del, None, nota))
+        sc_tab.aggiungi_layout(riga(b_mod, b_icona, b_colore, b_unisci, b_del, None, nota))
         lay.addWidget(sc_tab, 1)
 
         b_add.clicked.connect(self.aggiungi_categoria)
         self.in_cat.returnPressed.connect(self.aggiungi_categoria)
         b_mod.clicked.connect(self.modifica_categoria)
+        b_icona.clicked.connect(self.cambia_icona)
         b_colore.clicked.connect(self.cambia_colore)
         b_unisci.clicked.connect(self.unisci_categoria)
         b_del.clicked.connect(self.elimina_categoria)
@@ -466,16 +495,18 @@ class VistaImpostazioni(VistaBase):
         for r, c in enumerate(cats):
             n = self.db.query("SELECT COUNT(*) n FROM movimenti WHERE categoria=?",
                               (c["nome"],))[0]["n"]
-            it_nome = QTableWidgetItem(c["nome"])
-            it_nome.setData(Qt.UserRole, c["id"])
-            self.tab_cat.setItem(r, 0, it_nome)
-            self.tab_cat.setItem(r, 1, QTableWidgetItem(c["tipo"]))
+            it_icona = QTableWidgetItem(c["icona"] or "")
+            it_icona.setData(Qt.UserRole, c["id"])
+            it_icona.setTextAlignment(Qt.AlignCenter)
+            self.tab_cat.setItem(r, 0, it_icona)
+            self.tab_cat.setItem(r, 1, QTableWidgetItem(c["nome"]))
+            self.tab_cat.setItem(r, 2, QTableWidgetItem(c["tipo"]))
             it_col = QTableWidgetItem("  ████  " + c["colore"])
             it_col.setForeground(QColor(c["colore"]))
-            self.tab_cat.setItem(r, 2, it_col)
+            self.tab_cat.setItem(r, 3, it_col)
             it_n = QTableWidgetItem(str(n))
             it_n.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
-            self.tab_cat.setItem(r, 3, it_n)
+            self.tab_cat.setItem(r, 4, it_n)
 
     def _riempi_info(self) -> None:
         percorso = self.db.percorso
@@ -602,10 +633,12 @@ class VistaImpostazioni(VistaBase):
             self._avviso(f"La categoria «{nome}» esiste già tra le {tipo}.")
             return
         n = self.db.query("SELECT COUNT(*) n FROM categorie")[0]["n"]
-        self.db.esegui("INSERT INTO categorie(nome, tipo, colore) VALUES(?,?,?)",
-                       (nome, tipo, PALETTE_GRAFICI[n % len(PALETTE_GRAFICI)]))
+        icona = icona_suggerita(nome, tipo)
+        self.db.esegui(
+            "INSERT INTO categorie(nome, tipo, colore, icona) VALUES(?,?,?,?)",
+            (nome, tipo, PALETTE_GRAFICI[n % len(PALETTE_GRAFICI)], icona))
         self.in_cat.clear()
-        self._esito(f"Categoria «{nome}» aggiunta.")
+        self._esito(f"Categoria «{icona} {nome}» aggiunta — «Icona rapida» per cambiarla.")
         self.dati_cambiati.emit()
 
     def modifica_categoria(self) -> None:
@@ -625,10 +658,22 @@ class VistaImpostazioni(VistaBase):
                            (d["nome"], c["nome"]))
             self.db.esegui("UPDATE ricorrenti SET categoria=? WHERE categoria=?",
                            (d["nome"], c["nome"]))
-        self.db.esegui("UPDATE categorie SET nome=?, tipo=?, colore=? WHERE id=?",
-                       (d["nome"], d["tipo"], d["colore"], c["id"]))
+        self.db.esegui(
+            "UPDATE categorie SET nome=?, tipo=?, colore=?, icona=? WHERE id=?",
+            (d["nome"], d["tipo"], d["colore"], d["icona"], c["id"]))
         self._esito(f"Categoria «{d['nome']}» aggiornata.")
         self.dati_cambiati.emit()
+
+    def cambia_icona(self) -> None:
+        c = self._riga_selezionata(self.tab_cat, "categorie")
+        if c is None:
+            return
+        dlg = SelettoreIcona(c["icona"] or ICONA_PREDEFINITA, self)
+        if dlg.exec():
+            self.db.esegui("UPDATE categorie SET icona=? WHERE id=?",
+                           (dlg.scelta, c["id"]))
+            self._esito(f"Icona di «{c['nome']}» aggiornata: {dlg.scelta}")
+            self.dati_cambiati.emit()
 
     def cambia_colore(self) -> None:
         c = self._riga_selezionata(self.tab_cat, "categorie")
@@ -698,12 +743,12 @@ class VistaImpostazioni(VistaBase):
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No) != QMessageBox.Yes:
             return
         aggiunte = 0
-        for nome, tipo, colore in CATEGORIE_DEFAULT:
+        for nome, tipo, colore, icona in CATEGORIE_DEFAULT:
             if not self.db.query("SELECT id FROM categorie WHERE nome=? AND tipo=?",
                                  (nome, tipo)):
                 self.db.esegui(
-                    "INSERT INTO categorie(nome, tipo, colore) VALUES(?,?,?)",
-                    (nome, tipo, colore))
+                    "INSERT INTO categorie(nome, tipo, colore, icona) VALUES(?,?,?,?)",
+                    (nome, tipo, colore, icona))
                 aggiunte += 1
         self._esito(f"{aggiunte} categorie predefinite ripristinate."
                     if aggiunte else "Tutte le categorie predefinite erano già presenti.")

@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (QGridLayout, QHBoxLayout, QLabel, QProgressBar,
 
 from ..componenti import Scheda, SchedaStat, etichetta
 from ..grafici import GraficoBarre, GraficoCiambella, GraficoLinea
+from ..icone import etichetta_categoria
 from ..utils import (anno_corrente, data_it, etichetta_mese, euro, mese_corrente,
                      mese_precedente)
 from . import VistaBase
@@ -117,9 +118,11 @@ class VistaCruscotto(VistaBase):
         self.g_saldo.imposta_dati(punti, self.c["accento"])
 
         colori = self.db.colori_categorie()
+        icone_cat = self.db.icone_categorie()
         cats = self.db.per_categoria("uscita", dal_m, al_m)
         self.g_torta.imposta_dati(
-            [(n, t, colori.get(n, "")) for n, t in cats],
+            [(etichetta_categoria(n, icone_cat.get(n)), t, colori.get(n, ""))
+             for n, t in cats],
             euro(usc, v).replace(f" {v}", ""), "uscite del mese")
 
         self.g_barre.imposta_dati(
@@ -144,6 +147,7 @@ class VistaCruscotto(VistaBase):
                 w.setParent(None)
                 w.deleteLater()
 
+        icone = self.db.icone_categorie()
         budget = self.db.query("SELECT * FROM budget WHERE mensile > 0 ORDER BY mensile DESC")
         if not budget:
             self.lay_budget.addWidget(etichetta(
@@ -166,7 +170,7 @@ class VistaCruscotto(VistaBase):
             lv.setContentsMargins(0, 0, 0, 0)
             lv.setSpacing(3)
             testa = QHBoxLayout()
-            nome = QLabel(b["categoria"])
+            nome = QLabel(etichetta_categoria(b["categoria"], icone.get(b["categoria"])))
             valore = QLabel(f"{euro(speso, self.valuta)} / {euro(limite, self.valuta)}")
             valore.setObjectName("NotaScheda")
             testa.addWidget(nome)
@@ -182,13 +186,15 @@ class VistaCruscotto(VistaBase):
         self.lay_budget.addStretch(1)
 
     def _aggiorna_tabella(self) -> None:
+        icone_ultimi = self.db.icone_categorie()
         righe = self.db.query("SELECT * FROM movimenti ORDER BY data DESC, id DESC LIMIT 12")
         self.tab.setRowCount(len(righe))
         for r, m in enumerate(righe):
             segno = "+" if m["tipo"] == "entrata" else "−"
             colore = self.c["entrata"] if m["tipo"] == "entrata" else self.c["uscita"]
             valori = [data_it(m["data"]), m["descrizione"] or "—",
-                      m["categoria"], m["conto"],
+                      etichetta_categoria(m["categoria"], icone_ultimi.get(m["categoria"])),
+                      m["conto"],
                       f"{segno} {euro(float(m['importo']), self.valuta)}"]
             for col, testo in enumerate(valori):
                 it = QTableWidgetItem(testo)

@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox,
                                QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from ..componenti import DialogoMovimento, Scheda, etichetta, riga
+from ..icone import etichetta_categoria, solo_nome
 from ..utils import (anno_corrente, data_it, esporta_csv, euro, importa_csv,
                      mese_corrente)
 from . import VistaBase
@@ -136,11 +137,13 @@ class VistaMovimenti(VistaBase):
         self._aggiorna_categorie_rapide()
 
     def _aggiorna_categorie_rapide(self) -> None:
-        corrente = self.q_categoria.currentText()
+        corrente = self.q_categoria.currentData() or solo_nome(self.q_categoria.currentText())
         self.q_categoria.clear()
-        self.q_categoria.addItems([r["nome"] for r in self.db.query(
-            "SELECT nome FROM categorie WHERE tipo=? ORDER BY nome", (self._tipo_rapido,))])
-        idx = self.q_categoria.findText(corrente)
+        for r in self.db.query(
+                "SELECT nome, icona FROM categorie WHERE tipo=? ORDER BY nome",
+                (self._tipo_rapido,)):
+            self.q_categoria.addItem(etichetta_categoria(r["nome"], r["icona"]), r["nome"])
+        idx = self.q_categoria.findData(corrente)
         if idx >= 0:
             self.q_categoria.setCurrentIndex(idx)
 
@@ -274,18 +277,20 @@ class VistaMovimenti(VistaBase):
         if firma == self._firma_elenchi:
             return
         tipo = {1: "entrata", 2: "uscita"}.get(self.g_tipo.checkedId(), "")
-        for combo, vuoto, righe in (
-            (self.f_categoria, "Tutte", self.db.query(
-                "SELECT DISTINCT nome FROM categorie" +
-                (" WHERE tipo=?" if tipo else "") + " ORDER BY nome",
-                (tipo,) if tipo else ())),
-            (self.f_conto, "Tutti", self.db.query("SELECT nome FROM conti ORDER BY nome")),
-        ):
-            testo = combo.currentText()
+        categorie = self.db.query(
+            "SELECT nome, MAX(icona) icona FROM categorie" +
+            (" WHERE tipo=?" if tipo else "") + " GROUP BY nome ORDER BY nome",
+            (tipo,) if tipo else ())
+        conti = self.db.query("SELECT nome, '' icona FROM conti ORDER BY nome")
+        for combo, vuoto, righe in ((self.f_categoria, "Tutte", categorie),
+                                    (self.f_conto, "Tutti", conti)):
+            scelta = combo.currentData()
             combo.blockSignals(True)
-            combo.clear(); combo.addItem(vuoto)
-            combo.addItems([r["nome"] for r in righe])
-            idx = combo.findText(testo)
+            combo.clear()
+            combo.addItem(vuoto, "")
+            for r in righe:
+                combo.addItem(etichetta_categoria(r["nome"], r["icona"]), r["nome"])
+            idx = combo.findData(scelta) if scelta else 0
             combo.setCurrentIndex(max(0, idx))
             combo.blockSignals(False)
 
@@ -330,10 +335,8 @@ class VistaMovimenti(VistaBase):
         tipo = {1: "entrata", 2: "uscita"}.get(self.g_tipo.checkedId(), "")
         return {
             "dal": dal, "al": al, "tipo": tipo,
-            "categoria": "" if self.f_categoria.currentText() in ("Tutte", "")
-                         else self.f_categoria.currentText(),
-            "conto": "" if self.f_conto.currentText() in ("Tutti", "")
-                     else self.f_conto.currentText(),
+            "categoria": self.f_categoria.currentData() or "",
+            "conto": self.f_conto.currentData() or "",
             "testo": self.f_testo.text().strip(),
         }
 
@@ -358,7 +361,7 @@ class VistaMovimenti(VistaBase):
         menu.addSeparator()
         riga_sel = self.tab.currentRow()
         if riga_sel >= 0:
-            categoria = self.tab.item(riga_sel, 3).text()
+            categoria = solo_nome(self.tab.item(riga_sel, 3).text()).lstrip("● ").strip()
             conto = self.tab.item(riga_sel, 4).text()
             menu.addAction(f"Filtra per «{categoria}»",
                            lambda: self._filtra_per(self.f_categoria, categoria))
@@ -369,7 +372,7 @@ class VistaMovimenti(VistaBase):
         menu.exec(self.tab.viewport().mapToGlobal(posizione))
 
     def _filtra_per(self, combo: QComboBox, valore: str) -> None:
-        idx = combo.findText(valore)
+        idx = combo.findData(valore)
         if idx >= 0:
             combo.setCurrentIndex(idx)
 
@@ -390,6 +393,7 @@ class VistaMovimenti(VistaBase):
         filtri = self._filtri()
         righe = self.db.movimenti(**filtri)
         colori = self.db.colori_categorie()
+        icone = self.db.icone_categorie()
 
         self.tab.setUpdatesEnabled(False)
         self.tab.setSortingEnabled(False)
@@ -408,7 +412,8 @@ class VistaMovimenti(VistaBase):
                 Cella(data_relativa(m["data"]), m["data"]),
                 Cella("↑ entrata" if entrata else "↓ uscita"),
                 Cella(m["descrizione"] or "—"),
-                Cella("● " + m["categoria"]),
+                Cella(etichetta_categoria(m["categoria"],
+                                          icone.get(m["categoria"]) or "●")),
                 Cella(m["conto"]),
                 Cella(m["etichette"]),
                 Cella(("+ " if entrata else "− ") + euro(importo, v),
@@ -453,7 +458,8 @@ class VistaMovimenti(VistaBase):
             self.q_importo.setFocus()
             return
         descrizione = self.q_descrizione.text().strip()
-        categoria = self.q_categoria.currentText().strip() or "Altro"
+        categoria = (self.q_categoria.currentData()
+                     or solo_nome(self.q_categoria.currentText()) or "Altro")
         dati = {
             "id": None,
             "data": self.q_data.date().toString("yyyy-MM-dd"),
