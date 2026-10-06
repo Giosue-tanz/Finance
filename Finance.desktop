@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Finance
+GenericName=Gestione finanziaria
+Comment=Entrate, uscite, budget, grafici e strumenti finanziari — tutto offline
+Exec=/home/giosue/Scrivania/Finance/avvia.sh
+Path=/home/giosue/Scrivania/Finance
+Icon=/home/giosue/Scrivania/Finance/risorse/icona.png
+Terminal=false
+Categories=Office;Finance;
+Keywords=finanze;budget;spese;entrate;uscite;contabilita;
+StartupNotify=true
+StartupWMClass=main.py

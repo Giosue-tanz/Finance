@@ -1,0 +1,19 @@
+# Dati personali: non devono MAI finire nel repository.
+dati/
+*.db
+*.db.migrato
+*.sqlite
+*.sqlite3
+finanze-backup-*
+finance-backup-*
+
+# File generati
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Sistema
+.DS_Store
+*~

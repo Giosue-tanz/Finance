@@ -1,0 +1,140 @@
+# Finance
+
+![licenza](https://img.shields.io/badge/licenza-MIT-green) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![offline](https://img.shields.io/badge/rete-nessuna-success)
+
+Applicazione desktop nativa per la gestione delle finanze personali.
+**Funziona interamente offline**: nessuna connessione di rete, nessun account,
+nessun servizio esterno. I dati restano in un unico file SQLite dentro la cartella
+`dati/`.
+
+## Installazione
+
+```bash
+git clone git@github.com:Giosue-tanz/Finance.git
+cd Finance
+./installa.sh
+```
+
+`installa.sh` crea la voce nel menu applicazioni e l'icona sul Desktop puntando
+alla cartella in cui hai clonato il progetto. Requisiti: Python 3 e PySide6
+(`sudo pacman -S pyside6` su Arch, `sudo apt install python3-pyside6` su Debian/Ubuntu).
+
+## Avvio
+
+- Doppio clic sull'icona **Finance** sul Desktop, oppure
+- dal menu applicazioni (categoria Ufficio), oppure
+- da terminale: `./avvia.sh`
+
+## Aggiornamento
+
+```bash
+./aggiorna.sh
+```
+
+Lo script fa un backup dell'archivio, scarica l'ultima versione con `git pull`,
+elenca le novità e rigenera il collegamento. **I dati non vengono mai toccati**:
+vivono fuori dalla cartella del codice.
+
+## Dove stanno i dati
+
+| Cosa | Percorso |
+|---|---|
+| Archivio | `~/.local/share/Finance/finanze.db` |
+| Backup automatici | `~/.local/share/Finance/backup/` |
+
+Il codice (questo repository) e i dati sono separati: puoi cancellare, spostare o
+riclonare la cartella del progetto senza perdere nulla. Chi usava una versione
+precedente, con l'archivio dentro `dati/`, lo vede migrare da solo al primo avvio
+(l'originale resta come `dati/finanze.db.migrato`).
+Il file `.gitignore` esclude database e backup: i tuoi movimenti non finiscono
+su GitHub.
+
+## Sezioni
+
+| Sezione | Cosa fa |
+|---|---|
+| **Cruscotto** | Saldo, entrate/uscite del mese, andamento a 12 mesi, ripartizione per categoria, stato dei budget, ultimi movimenti |
+| **Movimenti** | Registro completo: inserimento, modifica, duplicazione, eliminazione multipla, filtri per periodo/tipo/categoria/conto, ricerca testuale, import ed export CSV |
+| **Budget** | Limite di spesa mensile per categoria, avanzamento con semaforo, confronto limite/spesa effettiva |
+| **Obiettivi** | Traguardi di risparmio con avanzamento, accantonamenti e quota mensile necessaria per rispettare la scadenza |
+| **Ricorrenti** | Canoni, stipendi e abbonamenti: generazione automatica dei movimenti dovuti, flusso fisso netto normalizzato su base mensile |
+| **Rapporti** | Analisi per periodo: ripartizioni, classifica delle categorie, risparmio netto mensile, dettaglio per categoria e riepilogo mese per mese |
+| **Strumenti** | Calcolatrici: prestito/mutuo con piano di ammortamento, interesse composto, piano di risparmio, regola 50/30/20, IVA e sconti, divisione spese |
+| **Impostazioni** | Quattro schede: **Conti** (aggiunta rapida, modifica, rinomina con aggiornamento dei movimenti, eliminazione con spostamento dei movimenti), **Categorie** (filtri entrate/uscite, ricerca, colori, unione di categorie), **Aspetto** (tema, dimensione del testo, valuta — applicati subito), **Dati e backup** (riepilogo archivio, backup immediato, ripristino, import/export, operazioni protette) |
+
+## Scorciatoie
+
+| Tasti | Azione |
+|---|---|
+| `Ctrl+N` | Nuovo movimento |
+| `Ctrl+1` … `Ctrl+8` | Passa alla sezione corrispondente |
+| `Ctrl+R` | Ricarica la vista corrente |
+| `Ctrl+T` | Cambia tema chiaro/scuro |
+| `Canc` | Elimina i movimenti selezionati |
+| `Ctrl+Q` | Esci |
+
+## Struttura del progetto
+
+```
+Finance/
+├── main.py                 avvio dell'applicazione
+├── avvia.sh                lanciatore
+├── installa.sh             crea icona e voce di menu
+├── aggiorna.sh             aggiorna da GitHub preservando i dati
+├── Finance.desktop         voce di menu / icona desktop
+├── risorse/                icone
+└── finanze/
+    ├── db.py               livello dati e query
+    ├── ricorrenze.py       calcolo delle scadenze ricorrenti
+    ├── utils.py            formattazione, date, CSV
+    ├── tema.py             palette e foglio di stile
+    ├── grafici.py          grafici disegnati con QPainter
+    ├── componenti.py       widget riutilizzabili e finestre di dialogo
+    ├── finestra.py         finestra principale e navigazione
+    └── views/              una vista per sezione, indipendenti tra loro
+```
+
+Ogni vista eredita da `VistaBase` ed espone `aggiorna()`: per aggiungere una
+nuova sezione basta creare un modulo in `views/` e registrarlo nella lista
+`VISTE` di `finestra.py`.
+
+## Formato CSV per l'importazione
+
+Separatore `;` o `,`, prima riga con le intestazioni:
+
+```
+data;tipo;importo;categoria;conto;descrizione
+06/10/2026;uscita;42,50;Spesa alimentare;Principale;Supermercato
+```
+
+Le date sono accettate sia come `gg/mm/aaaa` sia come `aaaa-mm-gg`.
+
+## Impostazioni
+
+La pagina è divisa in quattro schede, così ogni comando è a un clic di distanza:
+
+- **Conti** — campo di aggiunta rapida (scrivi il nome e premi Invio), doppio clic su
+  una riga per modificarla, rinomina che aggiorna automaticamente i movimenti
+  collegati, eliminazione che chiede su quale conto spostare i movimenti esistenti.
+- **Categorie** — filtri *Tutte / Uscite / Entrate*, ricerca per nome, colore visibile
+  in tabella, conteggio dei movimenti per categoria, **Unisci in…** per spostare tutti
+  i movimenti in un'altra categoria ed eliminare quella vecchia in un solo passaggio.
+- **Aspetto** — tema chiaro/scuro, dimensione del testo (compatta, normale, grande,
+  molto grande) e simbolo di valuta con anteprima: tutto si applica immediatamente
+  all'intera applicazione.
+- **Dati e backup** — percorso e dimensione dell'archivio, conteggi, data dell'ultimo
+  backup, backup immediato in un clic, apertura della cartella dati, ripristino,
+  export JSON/CSV, import CSV, ripristino delle categorie predefinite e azzeramento
+  protetto (richiede di scrivere `AZZERA` e crea prima un backup).
+
+Ogni operazione conferma l'esito in fondo alla pagina, senza finestre da chiudere.
+
+## Backup
+
+`Impostazioni → Crea backup del database` copia l'archivio dove preferisci.
+Prima di un ripristino o di un azzeramento l'app crea automaticamente una copia
+di sicurezza in `dati/`.
+
+## Licenza
+
+MIT — vedi [LICENSE](LICENSE).
