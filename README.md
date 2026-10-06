@@ -53,7 +53,7 @@ su GitHub.
 
 | Sezione | Cosa fa |
 |---|---|
-| **Cruscotto** | Saldo, entrate/uscite del mese, andamento a 12 mesi, ripartizione per categoria, stato dei budget, ultimi movimenti |
+| **Cruscotto** | Saldo, entrate/uscite del mese, andamento a 12 mesi, ripartizione per categoria, stato dei budget, ultimi movimenti. Ogni sezione è ridimensionabile trascinando i divisori e si può nascondere dal menu «Sezioni»: la disposizione viene salvata |
 | **Movimenti** | Barra di inserimento rapido (importo + Invio), filtri a un clic (oggi, 7 giorni, mese, anno, tutto, intervallo), ricerca istantanea, menu contestuale, eliminazione annullabile con Ctrl+Z, ordinamento per data e importo reali, import ed export CSV |
 | **Budget** | Limite di spesa mensile per categoria, avanzamento con semaforo, confronto limite/spesa effettiva |
 | **Obiettivi** | Traguardi di risparmio con avanzamento, accantonamenti e quota mensile necessaria per rispettare la scadenza |
@@ -112,6 +112,17 @@ data;tipo;importo;categoria;conto;descrizione
 ```
 
 Le date sono accettate sia come `gg/mm/aaaa` sia come `aaaa-mm-gg`.
+
+## Cruscotto su misura
+
+Le sezioni del cruscotto sono separate da divisori trascinabili: puoi allargare un
+grafico, restringere una scheda, dare più spazio alla tabella dei movimenti o
+regolare la larghezza dei singoli indicatori in alto. Il menu **Sezioni** permette
+di nascondere le parti che non usi e di tornare alla disposizione predefinita.
+Tutto viene salvato nell'archivio e ritrovato al riavvio.
+
+I grafici si adattano allo spazio disponibile: con poca altezza spariscono legende
+ed etichette degli assi, e il testo al centro della ciambella si ridimensiona da sé.
 
 ## Impostazioni
 

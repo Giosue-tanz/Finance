@@ -142,6 +142,10 @@ def foglio_stile(c: dict, scala: float = 1.0) -> str:
     }}
     QProgressBar::chunk {{ background: {c['accento']}; border-radius: 7px; }}
 
+    QSplitter::handle {{ background: transparent; }}
+    QSplitter::handle:hover {{ background: {selezione}; border-radius: 3px; }}
+    QSplitter::handle:pressed {{ background: {c['accento']}; }}
+
     QScrollBar:vertical {{ background: transparent; width: 10px; margin: 2px; }}
     QScrollBar::handle:vertical {{ background: {c['bordo']}; border-radius: 5px; min-height: 30px; }}
     QScrollBar::handle:vertical:hover {{ background: {c['testo2']}; }}

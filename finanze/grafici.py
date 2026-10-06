@@ -64,7 +64,8 @@ class GraficoLinea(BaseGrafico):
         if len(self.punti) < 2:
             self._vuoto(p); return
 
-        ml, mr, mt, mb = 62, 14, 16, 30
+        compatto_x = self.height() < 150
+        ml, mr, mt, mb = 62, 14, 16, (10 if compatto_x else 30)
         w, h = self.width(), self.height()
         area = QRectF(ml, mt, max(10, w - ml - mr), max(10, h - mt - mb))
         valori = [v for _, v in self.punti]
@@ -117,7 +118,7 @@ class GraficoLinea(BaseGrafico):
             p.drawEllipse(pt, 3.0, 3.0)
             self._zone.append((QRectF(pt.x() - 12, area.top(), 24, area.height()),
                                f"{etic}: {euro(v)}"))
-            if i % passo == 0 or i == len(self.punti) - 1:
+            if not compatto_x and (i % passo == 0 or i == len(self.punti) - 1):
                 p.setPen(QColor(self.c["testo2"]))
                 p.drawText(QRectF(pt.x() - 34, area.bottom() + 6, 68, 18),
                            Qt.AlignCenter, etic)
@@ -145,7 +146,8 @@ class GraficoBarre(BaseGrafico):
         if self.orizzontale:
             self._orizzontale(p); return
 
-        ml, mr, mt, mb = 62, 14, 34, 32
+        ridotto = self.height() < 170
+        ml, mr, mt, mb = 62, 14, (12 if ridotto else 34), (10 if ridotto else 32)
         area = QRectF(ml, mt, max(10, self.width() - ml - mr),
                       max(10, self.height() - mt - mb))
         massimo = max((max(v) if v else 0) for _, v in self.dati) or 1
@@ -162,7 +164,7 @@ class GraficoBarre(BaseGrafico):
 
         # legenda
         x_leg = area.left()
-        for nome, colore in self.serie:
+        for nome, colore in ([] if ridotto else self.serie):
             p.setPen(Qt.NoPen); p.setBrush(QColor(colore))
             p.drawRoundedRect(QRectF(x_leg, 10, 10, 10), 3, 3)
             p.setPen(QColor(self.c["testo2"]))
@@ -189,9 +191,10 @@ class GraficoBarre(BaseGrafico):
                 nome_s = self.serie[s][0] if s < len(self.serie) else ""
                 self._zone.append((rect.adjusted(-2, -6, 2, 6),
                                    f"{etic} · {nome_s}: {euro(v)}"))
-            p.setPen(QColor(self.c["testo2"]))
-            p.drawText(QRectF(centro - larghezza_gruppo / 2, area.bottom() + 6,
-                              larghezza_gruppo, 18), Qt.AlignCenter, etic)
+            if not ridotto:
+                p.setPen(QColor(self.c["testo2"]))
+                p.drawText(QRectF(centro - larghezza_gruppo / 2, area.bottom() + 6,
+                                  larghezza_gruppo, 18), Qt.AlignCenter, etic)
 
     def _orizzontale(self, p: QPainter):
         ml, mr, mt, mb = 130, 70, 8, 8
@@ -257,12 +260,24 @@ class GraficoCiambella(BaseGrafico):
         p.setBrush(QColor(self.c["pannello"]))
         p.drawEllipse(interno)
 
-        f = QFont(); f.setPointSize(13); f.setBold(True); p.setFont(f)
+        # il testo centrale si adatta al diametro: niente scritte fuori dal cerchio
+        f = QFont(); f.setBold(True)
+        dimensione = max(7, min(14, int(interno.width() / 7)))
+        f.setPointSize(dimensione)
+        while dimensione > 6 and QFontMetrics(f).horizontalAdvance(
+                self.centro_testo) > interno.width() - 10:
+            dimensione -= 1
+            f.setPointSize(dimensione)
+        p.setFont(f)
         p.setPen(QColor(self.c["testo"]))
-        p.drawText(interno.adjusted(0, -8, 0, -8), Qt.AlignCenter, self.centro_testo)
-        f.setPointSize(8); f.setBold(False); p.setFont(f)
-        p.setPen(QColor(self.c["testo2"]))
-        p.drawText(interno.adjusted(0, 16, 0, 16), Qt.AlignCenter, self.centro_nota)
+        spazio_nota = interno.height() > 54 and self.centro_nota
+        p.drawText(interno.adjusted(0, -8 if spazio_nota else 0, 0, -8 if spazio_nota else 0),
+                   Qt.AlignCenter, self.centro_testo)
+        if spazio_nota:
+            f.setPointSize(max(6, dimensione - 5)); f.setBold(False); p.setFont(f)
+            p.setPen(QColor(self.c["testo2"]))
+            if QFontMetrics(f).horizontalAdvance(self.centro_nota) <= interno.width() - 6:
+                p.drawText(interno.adjusted(0, 16, 0, 16), Qt.AlignCenter, self.centro_nota)
 
         # legenda
         x = rect.right() + 22
