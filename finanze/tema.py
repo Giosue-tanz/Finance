@@ -142,6 +142,13 @@ def foglio_stile(c: dict, scala: float = 1.0) -> str:
     }}
     QProgressBar::chunk {{ background: {c['accento']}; border-radius: 7px; }}
 
+    QLabel#Maniglia {{ color: {c['testo2']}; font-size: {p(13)}; }}
+    QLabel#ChiudiSezione {{ color: {c['testo2']}; font-size: {p(11)}; padding: 0 2px; }}
+    QLabel#ChiudiSezione:hover {{ color: {c['uscita']}; }}
+    QFrame#IndicatoreRilascio {{
+        background: {c['accento']}; border: none; border-radius: 2px;
+    }}
+
     QSplitter::handle {{ background: transparent; }}
     QSplitter::handle:hover {{ background: {selezione}; border-radius: 3px; }}
     QSplitter::handle:pressed {{ background: {c['accento']}; }}

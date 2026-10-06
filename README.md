@@ -115,14 +115,24 @@ Le date sono accettate sia come `gg/mm/aaaa` sia come `aaaa-mm-gg`.
 
 ## Cruscotto su misura
 
-Le sezioni del cruscotto sono separate da divisori trascinabili: puoi allargare un
-grafico, restringere una scheda, dare più spazio alla tabella dei movimenti o
-regolare la larghezza dei singoli indicatori in alto. Il menu **Sezioni** permette
-di nascondere le parti che non usi e di tornare alla disposizione predefinita.
-Tutto viene salvato nell'archivio e ritrovato al riavvio.
+Il cruscotto è composto da nove riquadri indipendenti: saldo, entrate, uscite,
+risparmio, andamento, ripartizione, barre mensili, budget e ultimi movimenti.
 
-I grafici si adattano allo spazio disponibile: con poca altezza spariscono legende
-ed etichette degli assi, e il testo al centro della ciambella si ridimensiona da sé.
+- **Sposta** — prendi un riquadro dalla maniglia `⠿` in alto a sinistra e trascinalo
+  dove vuoi: in un'altra posizione della stessa riga, in un'altra riga, oppure sul
+  bordo tra due righe per crearne una nuova. Una linea luminosa mostra dove finirà.
+- **Ridimensiona** — i divisori tra i riquadri si trascinano in orizzontale e in
+  verticale; tirandoli a fondo la sezione si collassa.
+- **Nascondi** — la `✕` sul riquadro o le spunte del menu **Sezioni**; dallo stesso
+  menu si torna alla disposizione predefinita.
+- **Si ricorda tutto** — posizioni, dimensioni e sezioni nascoste vengono salvate
+  nell'archivio e ritrovate al riavvio.
+
+Testi e grafici si adattano allo spazio: il valore di una scheda cresce o si
+riduce con il riquadro (e si rimpicciolisce ancora se il numero non ci sta),
+nota e mini-grafico scompaiono quando l'altezza non basta, i grafici tolgono
+legende ed etichette degli assi quando sono molto bassi e il testo al centro
+della ciambella si ridimensiona da sé.
 
 ## Impostazioni
 

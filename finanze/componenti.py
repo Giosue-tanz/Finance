@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QDate, Qt
+from PySide6.QtGui import QFont, QFontMetrics
 from PySide6.QtWidgets import (QComboBox, QDateEdit, QDialog, QDialogButtonBox,
                                QDoubleSpinBox, QFormLayout, QFrame, QHBoxLayout,
                                QLabel, QLineEdit, QSizePolicy, QSpinBox,
@@ -35,6 +36,67 @@ class Scheda(QFrame):
         self.layout_v.addLayout(layout)
 
 
+class ContenutoStat(QWidget):
+    """Valore grande, nota e sparkline: testi che si adattano allo spazio."""
+
+    def __init__(self, colori: dict, colore_valore: str | None = None, parent=None):
+        super().__init__(parent)
+        self.c = colori
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(3)
+        self.colore_valore = colore_valore or colori["testo"]
+        self.valore = QLabel("—")
+        self.valore.setObjectName("ValoreScheda")
+        self.nota = QLabel("")
+        self.nota.setObjectName("NotaScheda")
+        self.nota.setWordWrap(True)
+        self.spark = Sparkline(colori)
+        self.spark.colore = colore_valore or colori["accento"]
+        for w in (self.valore, self.nota, self.spark):
+            lay.addWidget(w)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+    def imposta(self, valore: float | str, nota: str = "", valuta: str = "€",
+                serie: list[float] | None = None) -> None:
+        self.valore.setText(euro(valore, valuta) if isinstance(valore, (int, float))
+                            else str(valore))
+        self.nota.setText(nota)
+        if serie is not None:
+            self.spark.imposta_dati(serie)
+        self.adatta_dimensioni(self.size())
+
+    def resizeEvent(self, ev):
+        super().resizeEvent(ev)
+        self.adatta_dimensioni(ev.size())
+
+    def adatta_dimensioni(self, dimensione) -> None:
+        """Il valore cresce con la scheda e si restringe se il testo non entra.
+
+        La misura si applica con uno stile sul widget: il foglio di stile globale
+        fissa i px e avrebbe la meglio su un semplice setFont().
+        """
+        larghezza = max(80, dimensione.width())
+        altezza = max(50, dimensione.height())
+        px = int(max(15, min(42, min(larghezza / 7.2, altezza / 2.6))))
+        prova = QFont(self.valore.font())
+        prova.setBold(True)
+        prova.setPixelSize(px)
+        while px > 13 and QFontMetrics(prova).horizontalAdvance(
+                self.valore.text()) > larghezza - 6:
+            px -= 1
+            prova.setPixelSize(px)
+        self.valore.setStyleSheet(
+            f"color: {self.colore_valore}; font-size: {px}px; font-weight: 700;")
+        self.px_valore = px
+
+        self.nota.setStyleSheet(f"color: {self.c['testo2']}; "
+                                f"font-size: {max(10, min(14, int(px * 0.4)))}px;")
+        self.nota.setVisible(altezza > 50)
+        self.spark.setVisible(altezza > 95)
+        self.spark.setFixedHeight(max(18, min(46, int(altezza * 0.22))))
+
+
 class SchedaStat(Scheda):
     """Scheda con etichetta, valore grande, nota e sparkline."""
 
@@ -45,25 +107,18 @@ class SchedaStat(Scheda):
         self.layout_v.setSpacing(4)
         self.et = QLabel(etichetta.upper())
         self.et.setObjectName("EtichettaScheda")
-        self.valore = QLabel("—")
-        self.valore.setObjectName("ValoreScheda")
-        if colore_valore:
-            self.valore.setStyleSheet(f"color: {colore_valore};")
-        self.nota = QLabel("")
-        self.nota.setObjectName("NotaScheda")
-        self.spark = Sparkline(colori)
-        self.spark.colore = colore_valore or colori["accento"]
-        for w in (self.et, self.valore, self.nota, self.spark):
-            self.layout_v.addWidget(w)
+        self.contenuto = ContenutoStat(colori, colore_valore)
+        self.valore = self.contenuto.valore
+        self.nota = self.contenuto.nota
+        self.spark = self.contenuto.spark
+        self.layout_v.addWidget(self.et)
+        self.layout_v.addWidget(self.contenuto, 1)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.setMinimumHeight(118)
 
     def imposta(self, valore: float | str, nota: str = "", valuta: str = "€",
                 serie: list[float] | None = None) -> None:
-        self.valore.setText(euro(valore, valuta) if isinstance(valore, (int, float))
-                            else str(valore))
-        self.nota.setText(nota)
-        if serie is not None:
-            self.spark.imposta_dati(serie)
+        self.contenuto.imposta(valore, nota, valuta, serie)
 
 
 def riga(*widgets, spaziatura: int = 10) -> QHBoxLayout:
