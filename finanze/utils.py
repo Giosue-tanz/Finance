@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import csv
 from calendar import monthrange
-from datetime import date
+from datetime import date, timedelta
 
 MESI = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio",
         "agosto", "settembre", "ottobre", "novembre", "dicembre"]
@@ -48,6 +48,55 @@ def mese_precedente() -> tuple[str, str]:
 def anno_corrente() -> tuple[str, str]:
     a = date.today().year
     return date(a, 1, 1).isoformat(), date(a, 12, 31).isoformat()
+
+
+# Periodi selezionabili sui singoli riquadri del cruscotto
+PERIODI = {
+    "mese": "Mese corrente",
+    "mese_scorso": "Mese scorso",
+    "tre_mesi": "Ultimi 3 mesi",
+    "sei_mesi": "Ultimi 6 mesi",
+    "anno": "Anno corrente",
+    "dodici_mesi": "Ultimi 12 mesi",
+    "tutto": "Tutto",
+}
+
+# Finestre temporali per i grafici mensili
+FINESTRE = {"6": "6 mesi", "12": "12 mesi", "24": "24 mesi", "36": "36 mesi"}
+
+
+def _indietro_mesi(riferimento: date, mesi: int) -> date:
+    """Primo giorno del mese situato «mesi» prima di quello di riferimento."""
+    totale = riferimento.year * 12 + (riferimento.month - 1) - mesi
+    return date(totale // 12, totale % 12 + 1, 1)
+
+
+def intervallo(periodo: str) -> tuple[str, str]:
+    """(dal, al) in formato ISO per una delle chiavi di PERIODI."""
+    oggi = date.today()
+    if periodo == "mese":
+        return mese_corrente()
+    if periodo == "mese_scorso":
+        return mese_precedente()
+    if periodo == "anno":
+        return anno_corrente()
+    if periodo == "tutto":
+        return "0001-01-01", "9999-12-31"
+    mesi = {"tre_mesi": 2, "sei_mesi": 5, "dodici_mesi": 11}.get(periodo, 0)
+    return _indietro_mesi(oggi, mesi).isoformat(), oggi.isoformat()
+
+
+def intervallo_precedente(periodo: str) -> tuple[str, str]:
+    """Finestra precedente della stessa ampiezza, per i confronti."""
+    if periodo == "mese":
+        return mese_precedente()
+    if periodo == "tutto":
+        return "0001-01-01", "0001-01-01"
+    dal, al = intervallo(periodo)
+    d = date.fromisoformat(dal)
+    a = date.fromisoformat(al)
+    durata = (a - d).days + 1
+    return (d - timedelta(days=durata)).isoformat(), (d - timedelta(days=1)).isoformat()
 
 
 def giorni_mese() -> tuple[int, int, int]:

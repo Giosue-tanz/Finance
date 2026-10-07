@@ -44,8 +44,17 @@ class Intestazione(QWidget):
         lay.addWidget(self.maniglia)
         lay.addWidget(self.titolo)
         lay.addStretch(1)
+        self.posto_controllo = lay.count()      # i controlli entrano qui, prima di ✕
         lay.addWidget(self.chiudi)
+        self.layout_barra = lay
         self._premuto: QPoint | None = None
+
+    def aggiungi_controllo(self, widget: QWidget) -> None:
+        """Inserisce un comando (es. il selettore di periodo) nell'intestazione."""
+        widget.setParent(self)
+        self.layout_barra.insertWidget(self.posto_controllo, widget)
+        self.posto_controllo += 1
+        self.setFixedHeight(max(26, widget.sizeHint().height() + 2))
 
     def imposta_scala(self, px: int) -> None:
         """Dimensione del titolo in pixel: vince sul foglio di stile globale."""
@@ -101,7 +110,8 @@ class Sezione(QFrame):
     chiusura_richiesta = Signal(str)
 
     def __init__(self, chiave: str, titolo: str, contenuto: QWidget,
-                 stile_titolo: str = "Sezione", parent=None):
+                 stile_titolo: str = "Sezione", controllo: QWidget | None = None,
+                 parent=None):
         super().__init__(parent)
         self.setObjectName("Scheda")
         self.chiave = chiave
@@ -115,6 +125,8 @@ class Sezione(QFrame):
         self.intestazione = Intestazione(titolo, stile_titolo, self)
         self.intestazione.chiusura_richiesta.connect(
             lambda: self.chiusura_richiesta.emit(self.chiave))
+        if controllo is not None:
+            self.intestazione.aggiungi_controllo(controllo)
         lay.addWidget(self.intestazione)
         lay.addWidget(contenuto, 1)
 

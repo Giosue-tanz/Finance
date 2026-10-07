@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QAction, QColor
-from PySide6.QtWidgets import (QHBoxLayout, QLabel, QMenu, QProgressBar,
+from PySide6.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QMenu, QProgressBar,
                                QPushButton, QTableWidget, QTableWidgetItem,
                                QVBoxLayout, QWidget)
 
@@ -16,7 +16,8 @@ from ..componenti import ContenutoStat, etichetta, riga
 from ..grafici import GraficoBarre, GraficoCiambella, GraficoLinea
 from ..icone import etichetta_categoria
 from ..sezioni import ContenitoreSezioni, Sezione
-from ..utils import data_it, etichetta_mese, euro, mese_corrente, mese_precedente
+from ..utils import (FINESTRE, PERIODI, data_it, etichetta_mese, euro, intervallo,
+                     intervallo_precedente, mese_corrente, mese_precedente)
 from . import VistaBase
 
 DISPOSIZIONE_PREDEFINITA = [
@@ -28,14 +29,27 @@ DISPOSIZIONE_PREDEFINITA = [
 
 TITOLI = {
     "saldo": "SALDO TOTALE",
-    "entrate": "ENTRATE DEL MESE",
-    "uscite": "USCITE DEL MESE",
-    "risparmio": "RISPARMIO DEL MESE",
-    "andamento": "Andamento del saldo (ultimi 12 mesi)",
-    "ripartizione": "Uscite del mese per categoria",
+    "entrate": "ENTRATE",
+    "uscite": "USCITE",
+    "risparmio": "RISPARMIO",
+    "andamento": "Andamento del saldo",
+    "ripartizione": "Uscite per categoria",
     "mensili": "Entrate e uscite per mese",
-    "budget": "Budget del mese",
+    "budget": "Budget",
     "ultimi": "Ultimi movimenti",
+}
+
+# Che cosa può scegliere ogni riquadro e con quale valore si parte
+PERIODI_SEZIONE = {
+    "saldo": (PERIODI, "tre_mesi"),
+    "entrate": (PERIODI, "mese"),
+    "uscite": (PERIODI, "mese"),
+    "risparmio": (PERIODI, "mese"),
+    "ripartizione": (PERIODI, "mese"),
+    "ultimi": (PERIODI, "tutto"),
+    "budget": ({"mese": "Mese corrente", "mese_scorso": "Mese scorso"}, "mese"),
+    "andamento": (FINESTRE, "12"),
+    "mensili": (FINESTRE, "12"),
 }
 
 
@@ -83,6 +97,7 @@ class VistaCruscotto(VistaBase):
 
     # -------------------------------------------------------------- sezioni
     def _crea_sezioni(self) -> None:
+        self.selettori: dict[str, QComboBox] = {}
         self.stat: dict[str, ContenutoStat] = {}
         for chiave, colore in (("saldo", self.c["accento"]),
                                ("entrate", self.c["entrata"]),
@@ -128,10 +143,39 @@ class VistaCruscotto(VistaBase):
 
     def _aggiungi(self, chiave: str, contenuto: QWidget,
                   stile: str = "Sezione") -> None:
-        sezione = Sezione(chiave, TITOLI[chiave], contenuto, stile)
+        sezione = Sezione(chiave, TITOLI[chiave], contenuto, stile,
+                          controllo=self._selettore(chiave))
         sezione.chiusura_richiesta.connect(
             lambda k: self.azioni[k].setChecked(False))
         self.contenitore.registra(sezione)
+
+    def _selettore(self, chiave: str) -> QComboBox | None:
+        """Menù di periodo da mostrare nell'intestazione del riquadro."""
+        if chiave not in PERIODI_SEZIONE:
+            return None
+        voci, predefinito = PERIODI_SEZIONE[chiave]
+        combo = QComboBox()
+        combo.setObjectName("SelettorePeriodo")
+        combo.setToolTip("Periodo di riferimento di questo riquadro")
+        for valore, testo in voci.items():
+            combo.addItem(testo, valore)
+        scelto = self.db.leggi(f"periodo_{chiave}", predefinito)
+        indice = combo.findData(scelto)
+        combo.setCurrentIndex(indice if indice >= 0 else combo.findData(predefinito))
+        combo.currentIndexChanged.connect(
+            lambda _, k=chiave, c=combo: self._cambia_periodo(k, c))
+        self.selettori[chiave] = combo
+        return combo
+
+    def _cambia_periodo(self, chiave: str, combo: QComboBox) -> None:
+        self.db.imposta(f"periodo_{chiave}", combo.currentData())
+        self.aggiorna()
+
+    def _periodo(self, chiave: str) -> str:
+        combo = self.selettori.get(chiave)
+        if combo is not None and combo.currentData():
+            return combo.currentData()
+        return PERIODI_SEZIONE[chiave][1]
 
     # ---------------------------------------------------------- disposizione
     def _ripristina(self) -> None:
@@ -177,53 +221,98 @@ class VistaCruscotto(VistaBase):
     # ------------------------------------------------------------------ dati
     def aggiorna(self) -> None:
         v = self.valuta
-        dal_m, al_m = mese_corrente()
-        dal_p, al_p = mese_precedente()
-        ent, usc = self.db.totali_periodo(dal_m, al_m)
-        ent_p, usc_p = self.db.totali_periodo(dal_p, al_p)
-        serie = self.db.serie_mensile(12)
+        icone = self.db.icone_categorie()
+        colori = self.db.colori_categorie()
 
-        saldo_iniziale = float(self.db.query(
+        self._aggiorna_saldo(v)
+        self._aggiorna_importi(v)
+        self._aggiorna_andamento()
+        self._aggiorna_ripartizione(v, colori, icone)
+        self._aggiorna_mensili()
+        self._aggiorna_budget_sezione(icone)
+        self._aggiorna_tabella(icone)
+
+    def _mesi_finestra(self, chiave: str) -> int:
+        try:
+            return int(self._periodo(chiave))
+        except ValueError:
+            return 12
+
+    def _serie_saldo(self, mesi: int) -> list[tuple[str, float]]:
+        iniziale = float(self.db.query(
             "SELECT COALESCE(SUM(saldo_iniziale),0) s FROM conti")[0]["s"])
-        cumulato, punti = saldo_iniziale, []
-        for mese, e, u in serie:
+        cumulato, punti = iniziale, []
+        for mese, e, u in self.db.serie_mensile(mesi):
             cumulato += e - u
             punti.append((etichetta_mese(mese), cumulato))
+        return punti
 
-        saldo = self.db.saldo_totale()
+    def _aggiorna_saldo(self, v: str) -> None:
+        periodo = self._periodo("saldo")
+        dal, al = intervallo(periodo)
+        ent, usc = self.db.totali_periodo(dal, al)
+        variazione = ent - usc
+        segno = "+" if variazione >= 0 else ""
         conti = len(self.db.query("SELECT id FROM conti"))
-        self.stat["saldo"].imposta(saldo, f"{conti} conti registrati", v,
-                                   [p[1] for p in punti])
-        self.stat["entrate"].imposta(ent, self._confronto(ent, ent_p), v,
-                                     [s[1] for s in serie])
-        self.stat["uscite"].imposta(usc, self._confronto(usc, usc_p), v,
-                                    [s[2] for s in serie])
-        risparmio = ent - usc
-        tasso = (risparmio / ent * 100) if ent > 0 else 0.0
-        self.stat["risparmio"].imposta(risparmio, f"tasso di risparmio {tasso:.0f}%", v,
-                                       [s[1] - s[2] for s in serie])
+        self.stat["saldo"].imposta(
+            self.db.saldo_totale(),
+            f"{conti} conti  ·  {segno}{euro(variazione, v)} "
+            f"nel periodo scelto", v,
+            [p[1] for p in self._serie_saldo(12)])
 
-        self.g_saldo.imposta_dati(punti, self.c["accento"])
+    def _aggiorna_importi(self, v: str) -> None:
+        for chiave in ("entrate", "uscite", "risparmio"):
+            periodo = self._periodo(chiave)
+            dal, al = intervallo(periodo)
+            ent, usc = self.db.totali_periodo(dal, al)
+            dal_p, al_p = intervallo_precedente(periodo)
+            ent_p, usc_p = self.db.totali_periodo(dal_p, al_p)
+            serie = self.db.serie_mensile(12)
+            if chiave == "entrate":
+                self.stat[chiave].imposta(
+                    ent, self._confronto(ent, ent_p, periodo), v, [s[1] for s in serie])
+            elif chiave == "uscite":
+                self.stat[chiave].imposta(
+                    usc, self._confronto(usc, usc_p, periodo), v, [s[2] for s in serie])
+            else:
+                risparmio = ent - usc
+                tasso = (risparmio / ent * 100) if ent > 0 else 0.0
+                self.stat[chiave].imposta(
+                    risparmio, f"tasso di risparmio {tasso:.0f}%", v,
+                    [s[1] - s[2] for s in serie])
 
-        colori = self.db.colori_categorie()
-        icone = self.db.icone_categorie()
-        cats = self.db.per_categoria("uscita", dal_m, al_m)
+    def _aggiorna_andamento(self) -> None:
+        self.g_saldo.imposta_dati(self._serie_saldo(self._mesi_finestra("andamento")),
+                                  self.c["accento"])
+
+    def _aggiorna_ripartizione(self, v: str, colori: dict, icone: dict) -> None:
+        dal, al = intervallo(self._periodo("ripartizione"))
+        _, usc = self.db.totali_periodo(dal, al)
+        cats = self.db.per_categoria("uscita", dal, al)
         self.g_torta.imposta_dati(
             [(etichetta_categoria(n, icone.get(n)), t, colori.get(n, "")) for n, t in cats],
-            euro(usc, v).replace(f" {v}", ""), "uscite del mese")
+            euro(usc, v).replace(f" {v}", ""),
+            PERIODI[self._periodo("ripartizione")].lower())
+
+    def _aggiorna_mensili(self) -> None:
+        serie = self.db.serie_mensile(self._mesi_finestra("mensili"))
         self.g_barre.imposta_dati(
             [(etichetta_mese(m), [e, u]) for m, e, u in serie],
             [("Entrate", self.c["entrata"]), ("Uscite", self.c["uscita"])])
 
-        self._aggiorna_budget(dal_m, al_m, icone)
-        self._aggiorna_tabella(icone)
+    def _aggiorna_budget_sezione(self, icone: dict) -> None:
+        dal, al = (mese_corrente() if self._periodo("budget") == "mese"
+                   else mese_precedente())
+        self._aggiorna_budget(dal, al, icone)
 
-    def _confronto(self, ora: float, prima: float) -> str:
+    def _confronto(self, ora: float, prima: float, periodo: str = "mese") -> str:
+        riferimento = {"mese": "al mese scorso", "mese_scorso": "al mese prima",
+                       "anno": "all'anno scorso"}.get(periodo, "al periodo precedente")
         if prima <= 0:
             return "nessun confronto disponibile"
         delta = (ora - prima) / prima * 100
         freccia = "▲" if delta > 0 else ("▼" if delta < 0 else "=")
-        return f"{freccia} {abs(delta):.0f}% rispetto al mese scorso"
+        return f"{freccia} {abs(delta):.0f}% rispetto {riferimento}"
 
     def _aggiorna_budget(self, dal: str, al: str, icone: dict) -> None:
         while self.lay_budget.count():
@@ -267,7 +356,10 @@ class VistaCruscotto(VistaBase):
         self.lay_budget.addStretch(1)
 
     def _aggiorna_tabella(self, icone: dict) -> None:
-        righe = self.db.query("SELECT * FROM movimenti ORDER BY data DESC, id DESC LIMIT 25")
+        dal, al = intervallo(self._periodo("ultimi"))
+        righe = self.db.query(
+            "SELECT * FROM movimenti WHERE data BETWEEN ? AND ? "
+            "ORDER BY data DESC, id DESC LIMIT 40", (dal, al))
         self.tab.setRowCount(len(righe))
         for r, m in enumerate(righe):
             segno = "+" if m["tipo"] == "entrata" else "−"

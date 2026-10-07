@@ -118,6 +118,10 @@ Le date sono accettate sia come `gg/mm/aaaa` sia come `aaaa-mm-gg`.
 Il cruscotto è composto da nove riquadri indipendenti: saldo, entrate, uscite,
 risparmio, andamento, ripartizione, barre mensili, budget e ultimi movimenti.
 
+- **Periodo per riquadro** — ogni sezione ha nel proprio titolo un menù con il periodo
+  a cui si riferisce: mese corrente, mese scorso, ultimi 3 o 6 mesi, anno, ultimi 12
+  mesi, tutto (6/12/24/36 mesi per i due grafici temporali, mese corrente o scorso per
+  il budget). Puoi quindi vedere le uscite dell'anno accanto alle entrate del mese.
 - **Sposta** — prendi un riquadro dalla maniglia `⠿` in alto a sinistra e trascinalo
   dove vuoi: in un'altra posizione della stessa riga, in un'altra riga, oppure sul
   bordo tra due righe per crearne una nuova. Una linea luminosa mostra dove finirà.
@@ -125,8 +129,8 @@ risparmio, andamento, ripartizione, barre mensili, budget e ultimi movimenti.
   verticale; tirandoli a fondo la sezione si collassa.
 - **Nascondi** — la `✕` sul riquadro o le spunte del menu **Sezioni**; dallo stesso
   menu si torna alla disposizione predefinita.
-- **Si ricorda tutto** — posizioni, dimensioni e sezioni nascoste vengono salvate
-  nell'archivio e ritrovate al riavvio.
+- **Si ricorda tutto** — posizioni, dimensioni, periodi scelti e sezioni nascoste
+  vengono salvati nell'archivio e ritrovati al riavvio.
 
 Testi e grafici si adattano allo spazio: il valore di una scheda cresce o si
 riduce con il riquadro (e si rimpicciolisce ancora se il numero non ci sta),
