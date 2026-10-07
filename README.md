@@ -116,7 +116,7 @@ Le date sono accettate sia come `gg/mm/aaaa` sia come `aaaa-mm-gg`.
 
 ## Menu laterale
 
-Il pulsante `☰` in cima alla barra (o `Ctrl+B`) la riduce a una colonna di icone:
+Il pulsante a destra del nome (o `Ctrl+B`) riduce la barra a una colonna di icone:
 restano le voci di navigazione, con il nome nel suggerimento, la sezione attiva
 evidenziata e il saldo complessivo in forma compatta in basso. Lo stato aperto o
 chiuso viene ricordato al riavvio.

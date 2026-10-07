@@ -62,6 +62,43 @@ PALETTE_GRAFICI = [
 SCALE = {"compatta": 0.9, "normale": 1.0, "grande": 1.15, "molto grande": 1.3}
 
 
+def frecce_spin(cartella: str, colore: str) -> tuple[str, str]:
+    """Crea (una volta sola) le due freccine usate da spinbox e tendine.
+
+    Qt non disegna frecce affidabili quando i pulsanti sono ridefiniti dal
+    foglio di stile: qui vengono generate come immagini e richiamate con url().
+    """
+    import os
+
+    from PySide6.QtCore import QPointF, Qt
+    from PySide6.QtGui import QColor, QPainter, QPainterPath, QPixmap
+
+    os.makedirs(cartella, exist_ok=True)
+    chiave = colore.lstrip("#")
+    percorsi = (os.path.join(cartella, f"su-{chiave}.png"),
+                os.path.join(cartella, f"giu-{chiave}.png"))
+    if all(os.path.exists(p) for p in percorsi):
+        return percorsi
+
+    for percorso, verso in zip(percorsi, (-1, 1)):
+        pixmap = QPixmap(11, 7)
+        pixmap.fill(Qt.transparent)
+        p = QPainter(pixmap)
+        p.setRenderHint(QPainter.Antialiasing, True)
+        path = QPainterPath()
+        if verso < 0:
+            path.moveTo(QPointF(1.0, 5.4)); path.lineTo(QPointF(5.5, 1.3))
+            path.lineTo(QPointF(10.0, 5.4))
+        else:
+            path.moveTo(QPointF(1.0, 1.6)); path.lineTo(QPointF(5.5, 5.7))
+            path.lineTo(QPointF(10.0, 1.6))
+        path.closeSubpath()
+        p.fillPath(path, QColor(colore))
+        p.end()
+        pixmap.save(percorso)
+    return percorsi
+
+
 def trasparente(colore: str, opacita: float) -> str:
     """Converte #rrggbb in rgba(): in Qt l'esadecimale a 8 cifre è #AARRGGBB,
     quindi scriverlo a mano porta a colori sbagliati."""
@@ -70,13 +107,22 @@ def trasparente(colore: str, opacita: float) -> str:
     return f"rgba({r}, {v}, {b}, {opacita:.2f})"
 
 
-def foglio_stile(c: dict, scala: float = 1.0) -> str:
+def foglio_stile(c: dict, scala: float = 1.0,
+                 frecce: tuple[str, str] | None = None) -> str:
     def p(px: float) -> str:
         """Dimensione in pixel adattata alla scala del testo."""
         return f"{px * scala:.1f}px"
 
     selezione = trasparente(c["accento"], 0.33)
     velo = trasparente("#ffffff", 0.22)
+    su, giu = frecce if frecce else ("", "")
+    frecce_qss = f"""
+    QSpinBox::up-arrow, QDoubleSpinBox::up-arrow, QDateEdit::up-arrow {{
+        image: url({su}); width: 11px; height: 7px;
+    }}
+    QSpinBox::down-arrow, QDoubleSpinBox::down-arrow, QDateEdit::down-arrow,
+    QComboBox::down-arrow {{ image: url({giu}); width: 11px; height: 7px; }}
+    """ if frecce else ""
 
     return f"""
     * {{ font-family: "Inter", "Noto Sans", "Segoe UI", sans-serif; font-size: {p(13)}; }}
@@ -205,6 +251,8 @@ def foglio_stile(c: dict, scala: float = 1.0) -> str:
         border-top-left-radius: 10px; border-top-right-radius: 10px;
     }}
     QTabBar::tab:selected {{ background: {c['pannello']}; color: {c['testo']}; font-weight: 600; }}
+
+    {frecce_qss}
 
     QToolTip {{
         background: {c['pannello2']}; color: {c['testo']};

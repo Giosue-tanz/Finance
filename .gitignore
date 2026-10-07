@@ -8,6 +8,7 @@ finanze-backup-*
 finance-backup-*
 
 # File generati
+cache/
 __pycache__/
 *.py[cod]
 *.egg-info/

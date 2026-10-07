@@ -12,8 +12,10 @@ from PySide6.QtWidgets import (QApplication, QButtonGroup, QHBoxLayout, QLabel,
                                QStatusBar, QVBoxLayout, QWidget)
 
 from .componenti import separatore
-from .db import APP_DIR, Database
-from .tema import ACCENTO_PREDEFINITO, SCALE, colori, foglio_stile
+from .icone_nav import icona, icona_menu
+from .db import APP_DIR, DATA_DIR, Database
+from .tema import (ACCENTO_PREDEFINITO, SCALE, colori, foglio_stile,
+                   frecce_spin)
 from .utils import compatto, euro, mese_corrente
 from .views.budget import VistaBudget
 from .views.cruscotto import VistaCruscotto
@@ -28,14 +30,14 @@ LARGHEZZA_APERTA = 222
 LARGHEZZA_CHIUSA = 62
 
 VISTE = [
-    ("◆", VistaCruscotto),
-    ("≡", VistaMovimenti),
-    ("▤", VistaBudget),
-    ("◎", VistaObiettivi),
-    ("↻", VistaRicorrenti),
-    ("▦", VistaRapporti),
-    ("⚙", VistaStrumenti),
-    ("⚒", VistaImpostazioni),
+    ("cruscotto", VistaCruscotto),
+    ("movimenti", VistaMovimenti),
+    ("budget", VistaBudget),
+    ("obiettivi", VistaObiettivi),
+    ("ricorrenti", VistaRicorrenti),
+    ("rapporti", VistaRapporti),
+    ("strumenti", VistaStrumenti),
+    ("impostazioni", VistaImpostazioni),
 ]
 
 
@@ -80,16 +82,17 @@ class FinestraPrincipale(QMainWindow):
 
         testa = QHBoxLayout()
         testa.setSpacing(6)
-        self.b_menu = QPushButton("☰")
-        self.b_menu.setObjectName("BottoneMenu")
-        self.b_menu.setFixedSize(34, 32)
-        self.b_menu.setToolTip("Apri o chiudi il menu  (Ctrl+B)")
-        self.b_menu.clicked.connect(self.commuta_barra)
         self.et_logo = QLabel("Finance")
         self.et_logo.setObjectName("Logo")
-        testa.addWidget(self.b_menu)
+        self.b_menu = QPushButton()
+        self.b_menu.setObjectName("BottoneMenu")
+        self.b_menu.setFixedSize(32, 30)
+        self.b_menu.setIconSize(QSize(19, 19))
+        self.b_menu.setToolTip("Apri o chiudi il menu  (Ctrl+B)")
+        self.b_menu.clicked.connect(self.commuta_barra)
         testa.addWidget(self.et_logo)
         testa.addStretch(1)
+        testa.addWidget(self.b_menu)
         lay.addLayout(testa)
 
         self.et_archivio = QLabel("archivio locale")
@@ -100,9 +103,10 @@ class FinestraPrincipale(QMainWindow):
         self.gruppo = QButtonGroup(self)
         self.gruppo.setExclusive(True)
         self.pulsanti: list[QPushButton] = []
-        for i, (simbolo, classe) in enumerate(VISTE):
+        for i, (nome_icona, classe) in enumerate(VISTE):
             b = QPushButton()
             b.setObjectName("Navigazione")
+            b.setIconSize(QSize(19, 19))
             b.setCheckable(True)
             b.clicked.connect(lambda _=False, idx=i: self.vai(idx))
             self.gruppo.addButton(b, i)
@@ -133,7 +137,7 @@ class FinestraPrincipale(QMainWindow):
         chiusa = self.barra_chiusa
         if applica_larghezza:
             self.barra.setFixedWidth(LARGHEZZA_CHIUSA if chiusa else LARGHEZZA_APERTA)
-        self.b_menu.setText("☰" if chiusa else "⟨")
+        self.b_menu.setIcon(icona_menu(self.c["testo2"], not chiusa))
         self.et_logo.setVisible(not chiusa)
         self.et_archivio.setVisible(not chiusa)
         self.et_saldo_nota.setVisible(not chiusa)
@@ -149,8 +153,8 @@ class FinestraPrincipale(QMainWindow):
                 b.setMinimumSize(0, 0)
                 b.setMaximumSize(16777215, 16777215)
 
-        for (simbolo, classe), b in zip(VISTE, self.pulsanti):
-            b.setText(simbolo if chiusa else f"  {simbolo}   {classe.titolo}")
+        for (nome_icona, classe), b in zip(VISTE, self.pulsanti):
+            b.setText("" if chiusa else f"   {classe.titolo}")
             b.setToolTip(classe.titolo if chiusa else "")
             b.setProperty("compatta", "si" if chiusa else "no")
             b.style().unpolish(b)
@@ -301,13 +305,22 @@ class FinestraPrincipale(QMainWindow):
         p.setColor(QPalette.Link, QColor(c["accento"]))
         return p
 
+    def _aggiorna_icone(self) -> None:
+        """Ridisegna le icone con i colori del tema corrente."""
+        for (nome_icona, _), b in zip(VISTE, self.pulsanti):
+            b.setIcon(icona(nome_icona, self.c["testo2"], "#ffffff"))
+        self.b_menu.setIcon(icona_menu(self.c["testo2"], not self.barra_chiusa))
+
     def applica_tema(self, nome: str) -> None:
         self.c = colori(nome, self.db.leggi("accento", ACCENTO_PREDEFINITO))
         scala = SCALE.get(self.db.leggi("scala", "normale"), 1.0)
         app = QApplication.instance()
         if app is not None:
             app.setPalette(self._palette(self.c))
-        self.setStyleSheet(foglio_stile(self.c, scala))
+        self.setStyleSheet(foglio_stile(self.c, scala, frecce_spin(
+            os.path.join(DATA_DIR, "cache"), self.c["testo2"])))
+        if hasattr(self, "pulsanti"):
+            self._aggiorna_icone()
         for vista in self.viste:
             vista.aggiorna_tema(self.c)
         self._aggiorna_stato()
