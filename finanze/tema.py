@@ -165,17 +165,16 @@ def foglio_stile(c: dict, scala: float = 1.0) -> str:
     }}
     QProgressBar::chunk {{ background: {c['accento']}; border-radius: 7px; }}
 
-    QComboBox#SelettorePeriodo {{
-        background: {c['pannello2']}; border: 1px solid {c['bordo']};
-        border-radius: 7px; padding: 2px 6px; font-size: {p(11)};
-        color: {c['testo2']}; min-height: 18px;
+    QLabel#Periodo {{
+        color: {c['testo2']}; font-size: {p(11)};
+        padding: 1px 7px; border-radius: 7px;
     }}
-    QComboBox#SelettorePeriodo:hover {{ border-color: {c['accento']}; color: {c['testo']}; }}
-    QComboBox#SelettorePeriodo::drop-down {{ border: none; width: 16px; }}
-
-    QLabel#Maniglia {{ color: {c['testo2']}; font-size: {p(13)}; }}
-    QLabel#ChiudiSezione {{ color: {c['testo2']}; font-size: {p(11)}; padding: 0 2px; }}
-    QLabel#ChiudiSezione:hover {{ color: {c['uscita']}; }}
+    QLabel#Periodo:hover {{ background: {c['pannello2']}; color: {c['accento']}; }}
+    QLabel#AzioniSezione {{
+        color: {c['testo2']}; font-size: {p(14)}; font-weight: 700;
+        padding: 0 6px; border-radius: 6px;
+    }}
+    QLabel#AzioniSezione:hover {{ background: {c['pannello2']}; color: {c['testo']}; }}
     QFrame#IndicatoreRilascio {{
         background: {c['accento']}; border: none; border-radius: 2px;
     }}

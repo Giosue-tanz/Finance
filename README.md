@@ -118,17 +118,21 @@ Le date sono accettate sia come `gg/mm/aaaa` sia come `aaaa-mm-gg`.
 Il cruscotto è composto da nove riquadri indipendenti: saldo, entrate, uscite,
 risparmio, andamento, ripartizione, barre mensili, budget e ultimi movimenti.
 
-- **Periodo per riquadro** — ogni sezione ha nel proprio titolo un menù con il periodo
-  a cui si riferisce: mese corrente, mese scorso, ultimi 3 o 6 mesi, anno, ultimi 12
-  mesi, tutto (6/12/24/36 mesi per i due grafici temporali, mese corrente o scorso per
-  il budget). Puoi quindi vedere le uscite dell'anno accanto alle entrate del mese.
-- **Sposta** — prendi un riquadro dalla maniglia `⠿` in alto a sinistra e trascinalo
-  dove vuoi: in un'altra posizione della stessa riga, in un'altra riga, oppure sul
-  bordo tra due righe per crearne una nuova. Una linea luminosa mostra dove finirà.
+L'intestazione di ogni riquadro resta essenziale: solo il titolo e, accanto, il
+periodo scritto in piccolo. Il resto compare quando serve.
+
+- **Periodo per riquadro** — clic sul periodo accanto al titolo per cambiarlo: mese
+  corrente, mese scorso, ultimi 3 o 6 mesi, anno, ultimi 12 mesi, tutto (6/12/24/36
+  mesi per i due grafici temporali, mese corrente o scorso per il budget). Puoi quindi
+  vedere le uscite dell'anno accanto alle entrate del mese.
+- **Sposta** — trascina un riquadro prendendolo dal titolo: in un'altra posizione
+  della stessa riga, in un'altra riga, oppure sul bordo tra due righe per crearne una
+  nuova. Una linea luminosa mostra dove finirà.
 - **Ridimensiona** — i divisori tra i riquadri si trascinano in orizzontale e in
   verticale; tirandoli a fondo la sezione si collassa.
-- **Nascondi** — la `✕` sul riquadro o le spunte del menu **Sezioni**; dallo stesso
-  menu si torna alla disposizione predefinita.
+- **Altri comandi** — il `⋯` che appare passando sul titolo (o il tasto destro)
+  apre periodo, «nascondi questa sezione» e ripristino della disposizione; le spunte
+  del menu **Sezioni** in alto fanno lo stesso per tutti i riquadri.
 - **Si ricorda tutto** — posizioni, dimensioni, periodi scelti e sezioni nascoste
   vengono salvati nell'archivio e ritrovati al riavvio.
 

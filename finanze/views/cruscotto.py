@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QAction, QColor
-from PySide6.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QMenu, QProgressBar,
+from PySide6.QtWidgets import (QHBoxLayout, QLabel, QMenu, QProgressBar,
                                QPushButton, QTableWidget, QTableWidgetItem,
                                QVBoxLayout, QWidget)
 
@@ -89,15 +89,17 @@ class VistaCruscotto(VistaBase):
                                     self.ripristina_predefinita)
         self.b_sezioni.setMenu(self.menu_sezioni)
 
-        aiuto = etichetta(
-            "Trascina una sezione dalla maniglia ⠿ per spostarla, anche su una riga "
-            "nuova; i divisori ne regolano le dimensioni. Tutto viene salvato.",
-            "NotaScheda")
+        aiuto = etichetta("Trascina un riquadro dal suo titolo per spostarlo  ·  "
+                          "clic sul periodo per cambiarlo", "NotaScheda")
+        aiuto.setToolTip(
+            "Trascina il titolo di un riquadro per spostarlo, anche su una riga nuova.\n"
+            "I divisori fra i riquadri ne regolano le dimensioni.\n"
+            "Il testo accanto al titolo apre i periodi; «⋯» gli altri comandi.\n"
+            "Disposizione, dimensioni e periodi vengono salvati.")
         return riga(self.b_sezioni, aiuto, None)
 
     # -------------------------------------------------------------- sezioni
     def _crea_sezioni(self) -> None:
-        self.selettori: dict[str, QComboBox] = {}
         self.stat: dict[str, ContenutoStat] = {}
         for chiave, colore in (("saldo", self.c["accento"]),
                                ("entrate", self.c["entrata"]),
@@ -143,39 +145,67 @@ class VistaCruscotto(VistaBase):
 
     def _aggiungi(self, chiave: str, contenuto: QWidget,
                   stile: str = "Sezione") -> None:
-        sezione = Sezione(chiave, TITOLI[chiave], contenuto, stile,
-                          controllo=self._selettore(chiave))
+        sezione = Sezione(chiave, TITOLI[chiave], contenuto, stile)
         sezione.chiusura_richiesta.connect(
             lambda k: self.azioni[k].setChecked(False))
+        sezione.periodo_richiesto.connect(self._menu_periodo)
+        sezione.menu_richiesto.connect(self._menu_sezione)
+        sezione.imposta_periodo(self._nome_periodo(chiave))
         self.contenitore.registra(sezione)
 
-    def _selettore(self, chiave: str) -> QComboBox | None:
-        """Menù di periodo da mostrare nell'intestazione del riquadro."""
+    # ------------------------------------------------------------- periodi
+    def _periodo(self, chiave: str) -> str:
+        """Periodo scelto per il riquadro, o quello predefinito."""
         if chiave not in PERIODI_SEZIONE:
-            return None
+            return ""
         voci, predefinito = PERIODI_SEZIONE[chiave]
-        combo = QComboBox()
-        combo.setObjectName("SelettorePeriodo")
-        combo.setToolTip("Periodo di riferimento di questo riquadro")
-        for valore, testo in voci.items():
-            combo.addItem(testo, valore)
         scelto = self.db.leggi(f"periodo_{chiave}", predefinito)
-        indice = combo.findData(scelto)
-        combo.setCurrentIndex(indice if indice >= 0 else combo.findData(predefinito))
-        combo.currentIndexChanged.connect(
-            lambda _, k=chiave, c=combo: self._cambia_periodo(k, c))
-        self.selettori[chiave] = combo
-        return combo
+        return scelto if scelto in voci else predefinito
 
-    def _cambia_periodo(self, chiave: str, combo: QComboBox) -> None:
-        self.db.imposta(f"periodo_{chiave}", combo.currentData())
+    def _nome_periodo(self, chiave: str) -> str:
+        if chiave not in PERIODI_SEZIONE:
+            return ""
+        voci, _ = PERIODI_SEZIONE[chiave]
+        return voci[self._periodo(chiave)].lower()
+
+    def _menu_periodo(self, chiave: str, punto) -> None:
+        """Elenco dei periodi, aperto dal testo nell'intestazione."""
+        if chiave not in PERIODI_SEZIONE:
+            return
+        voci, _ = PERIODI_SEZIONE[chiave]
+        corrente = self._periodo(chiave)
+        menu = QMenu(self)
+        for valore, testo in voci.items():
+            azione = menu.addAction(testo)
+            azione.setCheckable(True)
+            azione.setChecked(valore == corrente)
+            azione.triggered.connect(
+                lambda _=False, k=chiave, v=valore: self._imposta_periodo(k, v))
+        menu.exec(punto)
+
+    def _imposta_periodo(self, chiave: str, valore: str) -> None:
+        self.db.imposta(f"periodo_{chiave}", valore)
+        self.contenitore.sezioni[chiave].imposta_periodo(self._nome_periodo(chiave))
         self.aggiorna()
 
-    def _periodo(self, chiave: str) -> str:
-        combo = self.selettori.get(chiave)
-        if combo is not None and combo.currentData():
-            return combo.currentData()
-        return PERIODI_SEZIONE[chiave][1]
+    def _menu_sezione(self, chiave: str, punto) -> None:
+        """Menù «⋯» del riquadro: periodo e comandi della sezione."""
+        menu = QMenu(self)
+        if chiave in PERIODI_SEZIONE:
+            voci, _ = PERIODI_SEZIONE[chiave]
+            corrente = self._periodo(chiave)
+            sottomenu = menu.addMenu("Periodo")
+            for valore, testo in voci.items():
+                azione = sottomenu.addAction(testo)
+                azione.setCheckable(True)
+                azione.setChecked(valore == corrente)
+                azione.triggered.connect(
+                    lambda _=False, k=chiave, v=valore: self._imposta_periodo(k, v))
+            menu.addSeparator()
+        menu.addAction("Nascondi questa sezione",
+                       lambda: self.azioni[chiave].setChecked(False))
+        menu.addAction("Ripristina disposizione", self.ripristina_predefinita)
+        menu.exec(punto)
 
     # ---------------------------------------------------------- disposizione
     def _ripristina(self) -> None:
@@ -203,6 +233,9 @@ class VistaCruscotto(VistaBase):
         for sezione in self.contenitore.sezioni.values():
             sezione.show()
         self.contenitore.applica_disposizione(DISPOSIZIONE_PREDEFINITA)
+        for chiave in PERIODI_SEZIONE:
+            self.db.imposta(f"periodo_{chiave}", PERIODI_SEZIONE[chiave][1])
+            self.contenitore.sezioni[chiave].imposta_periodo(self._nome_periodo(chiave))
         QTimer.singleShot(0, self._dimensioni_predefinite)
         self.aggiorna()
 

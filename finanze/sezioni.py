@@ -20,55 +20,82 @@ ALTEZZA_MINIMA = 108
 
 
 class Intestazione(QWidget):
-    """Barra con maniglia, titolo e pulsante di chiusura: è l'area trascinabile."""
+    """Barra pulita: titolo, periodo come testo discreto, comandi al passaggio.
+
+    Tutta la barra è l'area di trascinamento, così non serve una maniglia fissa:
+    gli unici elementi sempre visibili sono il titolo e il periodo.
+    """
 
     chiusura_richiesta = Signal()
+    periodo_richiesto = Signal(QPoint)
+    menu_richiesto = Signal(QPoint)
 
     def __init__(self, titolo: str, stile: str = "Sezione", parent=None):
         super().__init__(parent)
         self.setCursor(Qt.OpenHandCursor)
-        self.setFixedHeight(26)
+        self.setFixedHeight(24)
         lay = QHBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
-        lay.setSpacing(8)
+        lay.setSpacing(10)
 
-        self.maniglia = QLabel("⠿")
-        self.maniglia.setObjectName("Maniglia")
         self.titolo = QLabel(titolo)
         self.titolo.setObjectName(stile)
-        self.chiudi = QLabel("✕")
-        self.chiudi.setObjectName("ChiudiSezione")
-        self.chiudi.setCursor(Qt.PointingHandCursor)
-        self.chiudi.setToolTip("Nascondi questa sezione")
+        self.periodo = QLabel("")
+        self.periodo.setObjectName("Periodo")
+        self.periodo.setCursor(Qt.PointingHandCursor)
+        self.periodo.hide()
+        self.azioni = QLabel("⋯")
+        self.azioni.setObjectName("AzioniSezione")
+        self.azioni.setCursor(Qt.PointingHandCursor)
+        self.azioni.setToolTip("Altre azioni")
+        self.azioni.setVisible(False)
 
-        lay.addWidget(self.maniglia)
         lay.addWidget(self.titolo)
+        lay.addWidget(self.periodo)
         lay.addStretch(1)
-        self.posto_controllo = lay.count()      # i controlli entrano qui, prima di ✕
-        lay.addWidget(self.chiudi)
-        self.layout_barra = lay
+        lay.addWidget(self.azioni)
         self._premuto: QPoint | None = None
 
-    def aggiungi_controllo(self, widget: QWidget) -> None:
-        """Inserisce un comando (es. il selettore di periodo) nell'intestazione."""
-        widget.setParent(self)
-        self.layout_barra.insertWidget(self.posto_controllo, widget)
-        self.posto_controllo += 1
-        self.setFixedHeight(max(26, widget.sizeHint().height() + 2))
+    # -------------------------------------------------------------- aspetto
+    def imposta_periodo(self, testo: str) -> None:
+        self.periodo.setText(f"{testo}  ⌄" if testo else "")
+        self.periodo.setVisible(bool(testo))
 
     def imposta_scala(self, px: int) -> None:
         """Dimensione del titolo in pixel: vince sul foglio di stile globale."""
         self.titolo.setStyleSheet(f"font-size: {px}px;")
-        self.maniglia.setStyleSheet(f"font-size: {max(11, px)}px;")
+        self.periodo.setStyleSheet(f"font-size: {max(10, px - 3)}px;")
 
-    # ------------------------------------------------------------ interazione
+    def enterEvent(self, ev):
+        self.azioni.setVisible(True)
+        super().enterEvent(ev)
+
+    def leaveEvent(self, ev):
+        self.azioni.setVisible(False)
+        super().leaveEvent(ev)
+
+    # ---------------------------------------------------------- interazione
+    def _dentro(self, widget: QLabel, punto: QPoint) -> bool:
+        return widget.isVisible() and widget.geometry().adjusted(
+            -4, -6, 4, 6).contains(punto)
+
     def mousePressEvent(self, ev):
-        if ev.button() == Qt.LeftButton:
-            if self.chiudi.geometry().adjusted(-6, -6, 6, 6).contains(ev.position().toPoint()):
-                self.chiusura_richiesta.emit()
-                return
-            self._premuto = ev.position().toPoint()
-            self.setCursor(Qt.ClosedHandCursor)
+        punto = ev.position().toPoint()
+        if ev.button() == Qt.RightButton:
+            self.menu_richiesto.emit(self.mapToGlobal(punto))
+            return
+        if ev.button() != Qt.LeftButton:
+            return
+        if self._dentro(self.periodo, punto):
+            self.periodo_richiesto.emit(
+                self.periodo.mapToGlobal(QPoint(0, self.periodo.height())))
+            return
+        if self._dentro(self.azioni, punto):
+            self.menu_richiesto.emit(
+                self.azioni.mapToGlobal(QPoint(0, self.azioni.height())))
+            return
+        self._premuto = punto
+        self.setCursor(Qt.ClosedHandCursor)
 
     def mouseReleaseEvent(self, _):
         self._premuto = None
@@ -108,10 +135,11 @@ class Sezione(QFrame):
     """Scheda spostabile: intestazione trascinabile più contenuto."""
 
     chiusura_richiesta = Signal(str)
+    periodo_richiesto = Signal(str, QPoint)
+    menu_richiesto = Signal(str, QPoint)
 
     def __init__(self, chiave: str, titolo: str, contenuto: QWidget,
-                 stile_titolo: str = "Sezione", controllo: QWidget | None = None,
-                 parent=None):
+                 stile_titolo: str = "Sezione", parent=None):
         super().__init__(parent)
         self.setObjectName("Scheda")
         self.chiave = chiave
@@ -125,10 +153,15 @@ class Sezione(QFrame):
         self.intestazione = Intestazione(titolo, stile_titolo, self)
         self.intestazione.chiusura_richiesta.connect(
             lambda: self.chiusura_richiesta.emit(self.chiave))
-        if controllo is not None:
-            self.intestazione.aggiungi_controllo(controllo)
+        self.intestazione.periodo_richiesto.connect(
+            lambda punto: self.periodo_richiesto.emit(self.chiave, punto))
+        self.intestazione.menu_richiesto.connect(
+            lambda punto: self.menu_richiesto.emit(self.chiave, punto))
         lay.addWidget(self.intestazione)
         lay.addWidget(contenuto, 1)
+
+    def imposta_periodo(self, testo: str) -> None:
+        self.intestazione.imposta_periodo(testo)
 
     def resizeEvent(self, ev):
         super().resizeEvent(ev)
