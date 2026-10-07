@@ -52,6 +52,8 @@ def anno_corrente() -> tuple[str, str]:
 
 # Periodi selezionabili sui singoli riquadri del cruscotto
 PERIODI = {
+    "oggi": "Oggi",
+    "settimana": "Ultimi 7 giorni",
     "mese": "Mese corrente",
     "mese_scorso": "Mese scorso",
     "tre_mesi": "Ultimi 3 mesi",
@@ -74,6 +76,10 @@ def _indietro_mesi(riferimento: date, mesi: int) -> date:
 def intervallo(periodo: str) -> tuple[str, str]:
     """(dal, al) in formato ISO per una delle chiavi di PERIODI."""
     oggi = date.today()
+    if periodo == "oggi":
+        return oggi.isoformat(), oggi.isoformat()
+    if periodo == "settimana":
+        return (oggi - timedelta(days=6)).isoformat(), oggi.isoformat()
     if periodo == "mese":
         return mese_corrente()
     if periodo == "mese_scorso":

@@ -58,7 +58,7 @@ class Intestazione(QWidget):
 
     # -------------------------------------------------------------- aspetto
     def imposta_periodo(self, testo: str) -> None:
-        self.periodo.setText(f"{testo}  ⌄" if testo else "")
+        self.periodo.setText(testo)
         self.periodo.setVisible(bool(testo))
 
     def imposta_scala(self, px: int) -> None:

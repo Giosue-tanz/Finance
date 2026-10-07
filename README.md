@@ -121,10 +121,12 @@ risparmio, andamento, ripartizione, barre mensili, budget e ultimi movimenti.
 L'intestazione di ogni riquadro resta essenziale: solo il titolo e, accanto, il
 periodo scritto in piccolo. Il resto compare quando serve.
 
-- **Periodo per riquadro** — clic sul periodo accanto al titolo per cambiarlo: mese
-  corrente, mese scorso, ultimi 3 o 6 mesi, anno, ultimi 12 mesi, tutto (6/12/24/36
-  mesi per i due grafici temporali, mese corrente o scorso per il budget). Puoi quindi
-  vedere le uscite dell'anno accanto alle entrate del mese.
+- **Periodo per riquadro** — clic sul periodo accanto al titolo per cambiarlo: oggi,
+  ultimi 7 giorni, mese corrente, mese scorso, ultimi 3 o 6 mesi, anno, ultimi 12 mesi,
+  tutto (6/12/24/36 mesi per i due grafici temporali, mese corrente o scorso per il
+  budget). Puoi quindi vedere le uscite della settimana accanto alle entrate del mese.
+  Il saldo totale non ha periodo: è un valore puntuale, e mostra la variazione del mese
+  come nota.
 - **Sposta** — trascina un riquadro prendendolo dal titolo: in un'altra posizione
   della stessa riga, in un'altra riga, oppure sul bordo tra due righe per crearne una
   nuova. Una linea luminosa mostra dove finirà.

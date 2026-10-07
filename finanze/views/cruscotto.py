@@ -41,7 +41,6 @@ TITOLI = {
 
 # Che cosa può scegliere ogni riquadro e con quale valore si parte
 PERIODI_SEZIONE = {
-    "saldo": (PERIODI, "tre_mesi"),
     "entrate": (PERIODI, "mese"),
     "uscite": (PERIODI, "mese"),
     "risparmio": (PERIODI, "mese"),
@@ -281,16 +280,14 @@ class VistaCruscotto(VistaBase):
         return punti
 
     def _aggiorna_saldo(self, v: str) -> None:
-        periodo = self._periodo("saldo")
-        dal, al = intervallo(periodo)
-        ent, usc = self.db.totali_periodo(dal, al)
+        """Il saldo è un valore puntuale: niente periodo, solo la variazione del mese."""
+        ent, usc = self.db.totali_periodo(*mese_corrente())
         variazione = ent - usc
         segno = "+" if variazione >= 0 else ""
         conti = len(self.db.query("SELECT id FROM conti"))
         self.stat["saldo"].imposta(
             self.db.saldo_totale(),
-            f"{conti} conti  ·  {segno}{euro(variazione, v)} "
-            f"nel periodo scelto", v,
+            f"{conti} conti  ·  {segno}{euro(variazione, v)} questo mese", v,
             [p[1] for p in self._serie_saldo(12)])
 
     def _aggiorna_importi(self, v: str) -> None:
@@ -339,7 +336,8 @@ class VistaCruscotto(VistaBase):
         self._aggiorna_budget(dal, al, icone)
 
     def _confronto(self, ora: float, prima: float, periodo: str = "mese") -> str:
-        riferimento = {"mese": "al mese scorso", "mese_scorso": "al mese prima",
+        riferimento = {"oggi": "a ieri", "settimana": "ai 7 giorni prima",
+                       "mese": "al mese scorso", "mese_scorso": "al mese prima",
                        "anno": "all'anno scorso"}.get(periodo, "al periodo precedente")
         if prima <= 0:
             return "nessun confronto disponibile"
