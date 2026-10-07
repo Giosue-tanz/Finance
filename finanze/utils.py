@@ -50,6 +50,13 @@ def anno_corrente() -> tuple[str, str]:
     return date(a, 1, 1).isoformat(), date(a, 12, 31).isoformat()
 
 
+def giorni_mese() -> tuple[int, int, int]:
+    """(giorni trascorsi, giorni totali, giorni rimanenti) del mese corrente."""
+    o = date.today()
+    totali = monthrange(o.year, o.month)[1]
+    return o.day, totali, totali - o.day
+
+
 def etichetta_mese(iso_mese: str) -> str:
     try:
         a, m = iso_mese.split("-")

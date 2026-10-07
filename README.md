@@ -55,7 +55,7 @@ su GitHub.
 |---|---|
 | **Cruscotto** | Saldo, entrate/uscite del mese, andamento a 12 mesi, ripartizione per categoria, stato dei budget, ultimi movimenti. Ogni sezione è ridimensionabile trascinando i divisori e si può nascondere dal menu «Sezioni»: la disposizione viene salvata |
 | **Movimenti** | Barra di inserimento rapido (importo + Invio), filtri a un clic (oggi, 7 giorni, mese, anno, tutto, intervallo), ricerca istantanea, menu contestuale, eliminazione annullabile con Ctrl+Z, ordinamento per data e importo reali, import ed export CSV |
-| **Budget** | Limite di spesa mensile per categoria, avanzamento con semaforo, confronto limite/spesa effettiva |
+| **Budget** | Limiti mensili per categoria, ritmo di spesa («puoi spendere X al giorno»), stima di fine mese, proposte calcolate dalla tua media storica, filtri per stato e azioni rapide (±10%, allinea alla media) |
 | **Obiettivi** | Traguardi di risparmio con avanzamento, accantonamenti e quota mensile necessaria per rispettare la scadenza |
 | **Ricorrenti** | Canoni, stipendi e abbonamenti: generazione automatica dei movimenti dovuti, flusso fisso netto normalizzato su base mensile |
 | **Rapporti** | Analisi per periodo: ripartizioni, classifica delle categorie, risparmio netto mensile, dettaglio per categoria e riepilogo mese per mese |
@@ -133,6 +133,24 @@ riduce con il riquadro (e si rimpicciolisce ancora se il numero non ci sta),
 nota e mini-grafico scompaiono quando l'altezza non basta, i grafici tolgono
 legende ed etichette degli assi quando sono molto bassi e il testo al centro
 della ciambella si ridimensiona da sé.
+
+## Budget che si imposta da solo
+
+La pagina risponde a tre domande pratiche:
+
+- **Quanto posso ancora spendere?** Le schede in alto mostrano pianificato, speso,
+  residuo e soprattutto **quanto puoi spendere al giorno** da qui a fine mese.
+- **Su cosa sto esagerando?** Ogni riga ha la barra di utilizzo, lo stato
+  (sotto controllo / attenzione / oltre il limite) e la **stima di fine mese**
+  calcolata sul ritmo attuale. I filtri *Sotto controllo · Vicino al limite ·
+  Oltre il limite* isolano subito i casi critici.
+- **Quanto dovrei mettere a budget?** «Proponi dalla media» calcola il limite dalla
+  spesa media degli ultimi 3 mesi, arrotondata a una cifra comoda. La sezione
+  **Categorie senza budget** elenca le categorie su cui spendi senza un limite, con
+  la proposta già pronta: doppio clic per adottarla, o «Imposta tutti i proposti».
+
+Scorciatoie: doppio clic su una riga per cambiare il limite, `Canc` per rimuoverlo,
+tasto destro per allineare alla media o variare il limite del ±10%.
 
 ## Impostazioni
 
