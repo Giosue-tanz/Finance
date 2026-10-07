@@ -73,7 +73,7 @@ su GitHub.
 | `Ctrl+Z` | Annulla l'ultima eliminazione |
 | `Ctrl+1` … `Ctrl+8` | Passa alla sezione corrispondente |
 | `Ctrl+R` | Ricarica la vista corrente |
-| `Ctrl+T` | Cambia tema chiaro/scuro |
+| `Ctrl+T` | Cambia tema chiaro/scuro (le preferenze stanno in Impostazioni → Aspetto) |
 | `Canc` | Elimina i movimenti selezionati |
 | `Ctrl+Q` | Esci |
 
@@ -166,9 +166,11 @@ La pagina è divisa in quattro schede, così ogni comando è a un clic di distan
   («Benzina» → ⛽, «Netflix» → 📺, «Dentista» → 🦷) e il pulsante *Icona rapida* apre una
   griglia di 82 icone divise per argomento. Le icone compaiono poi in tutta
   l'applicazione: movimenti, budget, grafici e rapporti.
-- **Aspetto** — tema chiaro/scuro, dimensione del testo (compatta, normale, grande,
-  molto grande) e simbolo di valuta con anteprima: tutto si applica immediatamente
-  all'intera applicazione.
+- **Aspetto** — tutte le preferenze visive in un posto solo: tema chiaro/scuro,
+  **colore principale** fra nove tinte (verde di default, poi blu, turchese, viola,
+  magenta, arancio, rosso, ambra, grafite), dimensione del testo (compatta, normale,
+  grande, molto grande) e simbolo di valuta con anteprima. Ogni scelta si applica
+  immediatamente all'intera applicazione e viene salvata.
 - **Dati e backup** — percorso e dimensione dell'archivio, conteggi, data dell'ultimo
   backup, backup immediato in un clic, apertura della cartella dati, ripristino,
   export JSON/CSV, import CSV, ripristino delle categorie predefinite e azzeramento

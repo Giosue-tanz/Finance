@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (QApplication, QButtonGroup, QHBoxLayout, QLabel,
 
 from .componenti import separatore
 from .db import APP_DIR, Database
-from .tema import CHIARO, SCALE, SCURO, foglio_stile
+from .tema import ACCENTO_PREDEFINITO, SCALE, colori, foglio_stile
 from .utils import euro, mese_corrente
 from .views.budget import VistaBudget
 from .views.cruscotto import VistaCruscotto
@@ -40,7 +40,8 @@ class FinestraPrincipale(QMainWindow):
     def __init__(self, db: Database):
         super().__init__()
         self.db = db
-        self.c = SCURO if db.leggi("tema", "scuro") == "scuro" else CHIARO
+        self.c = colori(db.leggi("tema", "scuro"),
+                        db.leggi("accento", ACCENTO_PREDEFINITO))
         self.setWindowTitle("Finance — Gestione finanziaria personale")
         self.resize(1320, 860)
         self.setMinimumSize(1050, 680)
@@ -101,9 +102,6 @@ class FinestraPrincipale(QMainWindow):
         self.et_saldo_nota.setObjectName("NotaScheda")
         lay.addWidget(self.et_saldo_nota)
         lay.addWidget(self.et_saldo)
-        self.b_tema = QPushButton("Cambia tema")
-        self.b_tema.clicked.connect(self.commuta_tema)
-        lay.addWidget(self.b_tema)
         return barra
 
     def _contenuto(self) -> QWidget:
@@ -210,7 +208,7 @@ class FinestraPrincipale(QMainWindow):
         return p
 
     def applica_tema(self, nome: str) -> None:
-        self.c = SCURO if nome == "scuro" else CHIARO
+        self.c = colori(nome, self.db.leggi("accento", ACCENTO_PREDEFINITO))
         scala = SCALE.get(self.db.leggi("scala", "normale"), 1.0)
         app = QApplication.instance()
         if app is not None:

@@ -1,4 +1,4 @@
-"""Palette e foglio di stile Qt (tema scuro/chiaro)."""
+"""Palette e foglio di stile Qt: tema chiaro/scuro e colore principale scelto."""
 from __future__ import annotations
 
 SCURO = {
@@ -28,6 +28,29 @@ CHIARO = {
     "attenzione": "#b9880f",
     "griglia": "#e4e7f0",
 }
+
+# Colore principale selezionabile dalle impostazioni: una tinta per tema.
+ACCENTI: dict[str, dict[str, str]] = {
+    "verde":     {"scuro": "#2ec27e", "chiaro": "#158a4f"},
+    "blu":       {"scuro": "#6c8cff", "chiaro": "#3b5bdb"},
+    "turchese":  {"scuro": "#35c4d7", "chiaro": "#0e8ea3"},
+    "viola":     {"scuro": "#b07cff", "chiaro": "#7641c8"},
+    "magenta":   {"scuro": "#f06fb4", "chiaro": "#c02b84"},
+    "arancio":   {"scuro": "#f7913a", "chiaro": "#c25e0a"},
+    "rosso":     {"scuro": "#f4716d", "chiaro": "#c0392b"},
+    "ambra":     {"scuro": "#e8b43a", "chiaro": "#a37408"},
+    "grafite":   {"scuro": "#9aa6bf", "chiaro": "#5a6782"},
+}
+ACCENTO_PREDEFINITO = "verde"
+
+
+def colori(tema: str = "scuro", accento: str = ACCENTO_PREDEFINITO) -> dict:
+    """Palette completa del tema richiesto con il colore principale scelto."""
+    base = dict(SCURO if tema == "scuro" else CHIARO)
+    tinta = ACCENTI.get(accento, ACCENTI[ACCENTO_PREDEFINITO])
+    base["accento"] = tinta["scuro" if tema == "scuro" else "chiaro"]
+    return base
+
 
 PALETTE_GRAFICI = [
     "#6c8cff", "#2fbf71", "#f2994a", "#c77dff", "#56cfe1",
@@ -183,6 +206,9 @@ def foglio_stile(c: dict, scala: float = 1.0) -> str:
     QPushButton#Segmento {{
         background: {c['pannello2']}; border: 1px solid {c['bordo']}; border-radius: 9px;
         padding: 7px 16px; color: {c['testo2']};
+    }}
+    QPushButton#Campione {{
+        border-radius: 9px; padding: 9px 14px; font-size: {p(12.5)};
     }}
     QPushButton#Segmento:checked {{
         background: {c['accento']}; color: #ffffff; border-color: {c['accento']};

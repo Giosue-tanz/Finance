@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QColorDialog,
 
 from ..componenti import Scheda, etichetta, riga
 from ..icone import ICONA_PREDEFINITA, SelettoreIcona, icona_suggerita
-from ..tema import PALETTE_GRAFICI, SCALE
+from ..tema import ACCENTI, ACCENTO_PREDEFINITO, PALETTE_GRAFICI, SCALE
 from ..utils import data_it, esporta_csv, euro, importa_csv
 from . import VistaBase
 
@@ -306,8 +306,28 @@ class VistaImpostazioni(VistaBase):
         fila.addStretch(1)
         sc_tema.aggiungi_layout(fila)
         sc_tema.aggiungi(etichetta("Il tema si applica immediatamente a tutta "
-                                   "l'applicazione (scorciatoia Ctrl+T).", "NotaScheda"))
+                                   "l'applicazione. Scorciatoia: Ctrl+T da "
+                                   "qualunque pagina.", "NotaScheda"))
         lay.addWidget(sc_tema)
+
+        sc_colore = Scheda("Colore principale")
+        self.gruppo_accento = QButtonGroup(self)
+        self.pulsanti_accento: dict[str, QPushButton] = {}
+        fila_colori = riga()
+        for i, nome in enumerate(ACCENTI):
+            b = QPushButton(nome.capitalize())
+            b.setObjectName("Campione")
+            b.setCheckable(True)
+            b.setMinimumWidth(96)
+            self.gruppo_accento.addButton(b, i)
+            self.pulsanti_accento[nome] = b
+            fila_colori.addWidget(b)
+        fila_colori.addStretch(1)
+        sc_colore.aggiungi_layout(fila_colori)
+        sc_colore.aggiungi(etichetta(
+            "Tinta di pulsanti, selezioni, barre e grafico dell'andamento. "
+            "Si applica subito a tutta l'applicazione.", "NotaScheda"))
+        lay.addWidget(sc_colore)
 
         sc_testo = Scheda("Dimensione del testo")
         self.gruppo_scala = QButtonGroup(self)
@@ -338,6 +358,7 @@ class VistaImpostazioni(VistaBase):
         lay.addStretch(1)
 
         self.gruppo_tema.idClicked.connect(self._imposta_tema)
+        self.gruppo_accento.idClicked.connect(self._imposta_accento)
         self.gruppo_scala.idClicked.connect(self._imposta_scala)
         self.cmb_valuta.currentTextChanged.connect(self._imposta_valuta)
         return w
@@ -441,6 +462,19 @@ class VistaImpostazioni(VistaBase):
         self.gruppo_tema.button(0 if self.db.leggi("tema", "scuro") == "scuro" else 1
                                 ).setChecked(True)
         self.gruppo_tema.blockSignals(False)
+
+        accento = self.db.leggi("accento", ACCENTO_PREDEFINITO)
+        tema = self.db.leggi("tema", "scuro")
+        self.gruppo_accento.blockSignals(True)
+        for nome, pulsante in self.pulsanti_accento.items():
+            tinta = ACCENTI[nome]["scuro" if tema == "scuro" else "chiaro"]
+            scelto = nome == accento
+            pulsante.setChecked(scelto)
+            bordo = self.c["testo"] if scelto else tinta
+            pulsante.setStyleSheet(
+                f"background: {tinta}; color: #ffffff; border: 2px solid {bordo}; "
+                f"font-weight: {'700' if scelto else '500'};")
+        self.gruppo_accento.blockSignals(False)
 
         scala = self.db.leggi("scala", "normale")
         nomi = list(SCALE)
@@ -760,6 +794,12 @@ class VistaImpostazioni(VistaBase):
         self.db.imposta("tema", nome)
         self.tema_cambiato.emit(nome)
         self._esito(f"Tema {nome} applicato.")
+
+    def _imposta_accento(self, indice: int) -> None:
+        nome = list(ACCENTI)[indice]
+        self.db.imposta("accento", nome)
+        self.tema_cambiato.emit(self.db.leggi("tema", "scuro"))
+        self._esito(f"Colore principale: {nome}.")
 
     def _imposta_scala(self, indice: int) -> None:
         nome = list(SCALE)[indice]
