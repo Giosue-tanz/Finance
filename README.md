@@ -74,6 +74,7 @@ su GitHub.
 | `Ctrl+1` … `Ctrl+8` | Passa alla sezione corrispondente |
 | `Ctrl+R` | Ricarica la vista corrente |
 | `Ctrl+T` | Cambia tema chiaro/scuro (le preferenze stanno in Impostazioni → Aspetto) |
+| `Ctrl+B` | Apre o chiude il menu laterale |
 | `Canc` | Elimina i movimenti selezionati |
 | `Ctrl+Q` | Esci |
 
@@ -112,6 +113,13 @@ data;tipo;importo;categoria;conto;descrizione
 ```
 
 Le date sono accettate sia come `gg/mm/aaaa` sia come `aaaa-mm-gg`.
+
+## Menu laterale
+
+Il pulsante `☰` in cima alla barra (o `Ctrl+B`) la riduce a una colonna di icone:
+restano le voci di navigazione, con il nome nel suggerimento, la sezione attiva
+evidenziata e il saldo complessivo in forma compatta in basso. Lo stato aperto o
+chiuso viene ricordato al riavvio.
 
 ## Cruscotto su misura
 

@@ -63,7 +63,7 @@ class VistaCruscotto(VistaBase):
         lay.setSpacing(8)
 
         self.contenitore = ContenitoreSezioni()
-        lay.addLayout(self._barra_strumenti())
+        self._prepara_menu_sezioni()
         lay.addWidget(self.contenitore, 1)
 
         self._crea_sezioni()
@@ -72,9 +72,14 @@ class VistaCruscotto(VistaBase):
         self._pronto = True
 
     # ------------------------------------------------------------ strumenti
-    def _barra_strumenti(self):
+    def _prepara_menu_sezioni(self) -> None:
+        """Pulsante «Sezioni», mostrato dalla finestra accanto a «Nuovo movimento»."""
         self.b_sezioni = QPushButton("Sezioni")
-        self.b_sezioni.setToolTip("Mostra o nascondi le sezioni del cruscotto")
+        self.b_sezioni.setToolTip(
+            "Mostra o nascondi i riquadri e ripristina la disposizione.\n\n"
+            "Trascina un riquadro dal titolo per spostarlo, anche su una riga nuova.\n"
+            "I divisori fra i riquadri ne regolano le dimensioni.\n"
+            "Il testo accanto al titolo apre i periodi; «⋯» gli altri comandi.")
         self.menu_sezioni = QMenu(self)
         self.azioni: dict[str, QAction] = {}
         for chiave, nome in TITOLI.items():
@@ -87,15 +92,7 @@ class VistaCruscotto(VistaBase):
         self.menu_sezioni.addAction("Ripristina disposizione predefinita",
                                     self.ripristina_predefinita)
         self.b_sezioni.setMenu(self.menu_sezioni)
-
-        aiuto = etichetta("Trascina un riquadro dal suo titolo per spostarlo  ·  "
-                          "clic sul periodo per cambiarlo", "NotaScheda")
-        aiuto.setToolTip(
-            "Trascina il titolo di un riquadro per spostarlo, anche su una riga nuova.\n"
-            "I divisori fra i riquadri ne regolano le dimensioni.\n"
-            "Il testo accanto al titolo apre i periodi; «⋯» gli altri comandi.\n"
-            "Disposizione, dimensioni e periodi vengono salvati.")
-        return riga(self.b_sezioni, aiuto, None)
+        self.azioni_intestazione = [self.b_sezioni]
 
     # -------------------------------------------------------------- sezioni
     def _crea_sezioni(self) -> None:

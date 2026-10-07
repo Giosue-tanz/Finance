@@ -93,6 +93,15 @@ def foglio_stile(c: dict, scala: float = 1.0) -> str:
         padding: 10px 14px; text-align: left; color: {c['testo2']}; font-size: {p(13.5)};
     }}
     QPushButton#Navigazione:hover {{ background: {c['pannello2']}; color: {c['testo']}; }}
+    QPushButton#Navigazione[compatta="si"] {{
+        text-align: center; padding: 0; font-size: {p(20)}; border-radius: 11px;
+    }}
+    QPushButton#Navigazione[compatta="si"]:hover {{ background: {c['pannello2']}; }}
+    QPushButton#BottoneMenu {{
+        background: transparent; border: none; border-radius: 9px;
+        color: {c['testo2']}; font-size: {p(15)};
+    }}
+    QPushButton#BottoneMenu:hover {{ background: {c['pannello2']}; color: {c['testo']}; }}
     QPushButton#Navigazione:checked {{
         background: {c['accento']}; color: #ffffff; font-weight: 600;
     }}

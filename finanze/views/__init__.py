@@ -20,6 +20,8 @@ class VistaBase(QWidget):
         self.db = db
         self.c = colori
         self.grafici: list = []
+        # comandi che la finestra mostra in alto a destra quando la vista è attiva
+        self.azioni_intestazione: list[QWidget] = []
         self.costruisci()
 
     # da sovrascrivere
