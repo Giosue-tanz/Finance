@@ -19,7 +19,8 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QColorDialog,
                                QDoubleSpinBox, QFileDialog, QFormLayout,
                                QHeaderView, QInputDialog, QLabel, QLineEdit,
                                QMessageBox, QPushButton, QTableWidget,
-                               QGridLayout, QScrollArea, QTableWidgetItem, QTabWidget, QToolButton,
+                               QGridLayout, QHBoxLayout, QScrollArea,
+                               QTableWidgetItem, QTabWidget, QToolButton,
                                QVBoxLayout, QWidget)
 
 from ..componenti import Scheda, abilita_deselezione, etichetta, riga
@@ -251,12 +252,51 @@ class VistaImpostazioni(VistaBase):
         w = QWidget(); lay = QVBoxLayout(w); lay.setSpacing(12)
         lay.setContentsMargins(12, 14, 12, 12)
 
-        sc = Scheda()
+        # ---------------------------------------------------- nuova categoria
+        sc = Scheda("Nuova categoria")
+        self._icona_nuova = ICONA_PREDEFINITA
+        self._icona_scelta = False          # l'utente l'ha scelta a mano?
+        self._colore_nuova = PALETTE_GRAFICI[0]
+
+        self.b_icona_nuova = QPushButton()
+        self.b_icona_nuova.setObjectName("IconaCategoria")
+        self.b_icona_nuova.setFixedSize(46, 38)
+        self.b_icona_nuova.setToolTip("Scegli l'icona (altrimenti la propone il nome)")
         self.in_cat = QLineEdit()
-        self.in_cat.setPlaceholderText("Nome della nuova categoria, poi Invio")
-        self.in_tipo_cat = QComboBox(); self.in_tipo_cat.addItems(["uscita", "entrata"])
+        self.in_cat.setPlaceholderText("Nome della categoria, poi Invio")
+        self.in_cat.setClearButtonEnabled(True)
+
+        self.gruppo_tipo_nuova = QButtonGroup(self)
+        fila_tipo = riga(spaziatura=0)
+        for i, nome in enumerate(("Uscita", "Entrata")):
+            b = QPushButton(nome); b.setObjectName("Segmento"); b.setCheckable(True)
+            b.setChecked(i == 0)
+            self.gruppo_tipo_nuova.addButton(b, i)
+            fila_tipo.addWidget(b)
+
+        self.b_colore_nuova = QPushButton()
+        self.b_colore_nuova.setObjectName("CampioneColore")
+        self.b_colore_nuova.setFixedSize(38, 38)
+        self.b_colore_nuova.setToolTip("Colore della categoria")
         b_add = QPushButton("Aggiungi"); b_add.setObjectName("Primario")
-        sc.aggiungi_layout(riga(self.in_cat, self.in_tipo_cat, b_add))
+        b_add.setMinimumWidth(110)
+        sc.aggiungi_layout(riga(self.b_icona_nuova, self.in_cat, fila_tipo,
+                                self.b_colore_nuova, b_add))
+
+        self.et_anteprima = QLabel("")
+        self.et_anteprima.setObjectName("Pillola")
+        self.et_suggerite = QLabel("Suggerite:")
+        self.et_suggerite.setObjectName("NotaScheda")
+        self.fila_suggerite = riga()
+        self.fila_suggerite.addWidget(self.et_anteprima)
+        self.fila_suggerite.addWidget(self.et_suggerite)
+        self.contenitore_suggerite = QWidget()
+        self.lay_suggerite = QHBoxLayout(self.contenitore_suggerite)
+        self.lay_suggerite.setContentsMargins(0, 0, 0, 0)
+        self.lay_suggerite.setSpacing(6)
+        self.fila_suggerite.addWidget(self.contenitore_suggerite)
+        self.fila_suggerite.addStretch(1)
+        sc.aggiungi_layout(self.fila_suggerite)
         lay.addWidget(sc)
 
         sc_tab = Scheda("Categorie")
@@ -294,6 +334,10 @@ class VistaImpostazioni(VistaBase):
 
         b_add.clicked.connect(self.aggiungi_categoria)
         self.in_cat.returnPressed.connect(self.aggiungi_categoria)
+        self.in_cat.textEdited.connect(self._nome_modificato)
+        self.b_icona_nuova.clicked.connect(self._scegli_icona_nuova)
+        self.b_colore_nuova.clicked.connect(self._scegli_colore_nuova)
+        self.gruppo_tipo_nuova.idClicked.connect(lambda _: self._aggiorna_nuova())
         b_mod.clicked.connect(self.modifica_categoria)
         b_icona.clicked.connect(self.cambia_icona)
         b_colore.clicked.connect(self.cambia_colore)
@@ -543,6 +587,7 @@ class VistaImpostazioni(VistaBase):
 
         self._riempi_conti()
         self._riempi_categorie()
+        self._aggiorna_nuova()
         self._riempi_info()
 
     def _riempi_conti(self) -> None:
@@ -712,22 +757,108 @@ class VistaImpostazioni(VistaBase):
         self.dati_cambiati.emit()
 
     # ------------------------------------------------------------- categorie
+    # ------------------------------------------------- creazione categoria
+    COMUNI = {
+        "uscita": ["Abbonamenti", "Palestra", "Animali", "Regali", "Viaggi",
+                   "Farmacia", "Carburante", "Ristoranti", "Abbigliamento",
+                   "Assicurazioni", "Tasse", "Manutenzione"],
+        "entrata": ["Bonus", "Vendite", "Affitti", "Interessi", "Regali ricevuti",
+                    "Lavoro extra"],
+    }
+
+    def _tipo_nuova(self) -> str:
+        return "uscita" if self.gruppo_tipo_nuova.checkedId() == 0 else "entrata"
+
+    def _nome_modificato(self, testo: str) -> None:
+        """Mentre scrivi, l'icona segue il nome (finché non la scegli a mano)."""
+        if not self._icona_scelta:
+            self._icona_nuova = icona_suggerita(testo, self._tipo_nuova())
+        self._aggiorna_nuova(ricarica_suggerite=False)
+
+    def _scegli_icona_nuova(self) -> None:
+        dlg = SelettoreIcona(self._icona_nuova, self)
+        if dlg.exec():
+            self._icona_nuova = dlg.scelta
+            self._icona_scelta = True
+            self._aggiorna_nuova(ricarica_suggerite=False)
+
+    def _scegli_colore_nuova(self) -> None:
+        colore = QColorDialog.getColor(QColor(self._colore_nuova), self,
+                                       "Colore della categoria")
+        if colore.isValid():
+            self._colore_nuova = colore.name()
+            self._aggiorna_nuova(ricarica_suggerite=False)
+
+    def _colore_libero(self) -> str:
+        """Primo colore della tavolozza non ancora usato da altre categorie."""
+        usati = {r["colore"].lower() for r in self.db.query("SELECT colore FROM categorie")}
+        for colore in PALETTE_GRAFICI:
+            if colore.lower() not in usati:
+                return colore
+        return PALETTE_GRAFICI[len(usati) % len(PALETTE_GRAFICI)]
+
+    def _aggiorna_nuova(self, ricarica_suggerite: bool = True) -> None:
+        """Aggiorna icona, colore e anteprima della categoria in costruzione."""
+        if not self._icona_scelta:
+            self._icona_nuova = icona_suggerita(self.in_cat.text(), self._tipo_nuova())
+        self.b_icona_nuova.setText(self._icona_nuova)
+        self.b_colore_nuova.setStyleSheet(
+            f"background: {self._colore_nuova}; border: 2px solid {self.c['bordo']};"
+            "border-radius: 9px;")
+        nome = self.in_cat.text().strip() or "nuova categoria"
+        self.et_anteprima.setText(f"  {self._icona_nuova}  {nome}  ")
+        self.et_anteprima.setStyleSheet(
+            f"color: {self._colore_nuova}; font-weight: 600;")
+        if ricarica_suggerite:
+            self._carica_suggerite()
+
+    def _carica_suggerite(self) -> None:
+        """Pastiglie con categorie comuni non ancora presenti: un clic le crea."""
+        while self.lay_suggerite.count():
+            elemento = self.lay_suggerite.takeAt(0)
+            if elemento.widget():
+                elemento.widget().deleteLater()
+        tipo = self._tipo_nuova()
+        presenti = {r["nome"].lower() for r in self.db.query(
+            "SELECT nome FROM categorie WHERE tipo=?", (tipo,))}
+        mancanti = [n for n in self.COMUNI[tipo] if n.lower() not in presenti][:6]
+        for nome in mancanti:
+            b = QPushButton(f"{icona_suggerita(nome, tipo)}  {nome}")
+            b.setObjectName("Suggerita")
+            b.setCursor(Qt.PointingHandCursor)
+            b.clicked.connect(lambda _=False, n=nome: self._crea(n, tipo))
+            self.lay_suggerite.addWidget(b)
+        self.et_suggerite.setVisible(bool(mancanti))
+        self.contenitore_suggerite.setVisible(bool(mancanti))
+
+    def _crea(self, nome: str, tipo: str, icona: str = "",
+              colore: str = "") -> bool:
+        if self.db.query("SELECT id FROM categorie WHERE nome=? AND tipo=?",
+                         (nome, tipo)):
+            self._avviso(f"La categoria «{nome}» esiste già tra le {tipo}.")
+            return False
+        icona = icona or icona_suggerita(nome, tipo)
+        self.db.esegui(
+            "INSERT INTO categorie(nome, tipo, colore, icona) VALUES(?,?,?,?)",
+            (nome, tipo, colore or self._colore_libero(), icona))
+        self._esito(f"Categoria «{icona} {nome}» aggiunta.")
+        self.dati_cambiati.emit()
+        return True
+
     def aggiungi_categoria(self) -> None:
         nome = self.in_cat.text().strip()
         if not nome:
+            self._avviso("Scrivi il nome della categoria da aggiungere.")
+            self.in_cat.setFocus()
             return
-        tipo = self.in_tipo_cat.currentText()
-        if self.db.query("SELECT id FROM categorie WHERE nome=? AND tipo=?", (nome, tipo)):
-            self._avviso(f"La categoria «{nome}» esiste già tra le {tipo}.")
+        tipo = self._tipo_nuova()
+        if not self._crea(nome, tipo, self._icona_nuova, self._colore_nuova):
             return
-        n = self.db.query("SELECT COUNT(*) n FROM categorie")[0]["n"]
-        icona = icona_suggerita(nome, tipo)
-        self.db.esegui(
-            "INSERT INTO categorie(nome, tipo, colore, icona) VALUES(?,?,?,?)",
-            (nome, tipo, PALETTE_GRAFICI[n % len(PALETTE_GRAFICI)], icona))
+        # pronto per la prossima: nome svuotato, icona e colore di nuovo automatici
         self.in_cat.clear()
-        self._esito(f"Categoria «{icona} {nome}» aggiunta — «Icona rapida» per cambiarla.")
-        self.dati_cambiati.emit()
+        self._icona_scelta = False
+        self._colore_nuova = self._colore_libero()
+        self.in_cat.setFocus()
 
     def modifica_categoria(self) -> None:
         c = self._riga_selezionata(self.tab_cat, "categorie")

@@ -271,6 +271,20 @@ def foglio_stile(c: dict, scala: float = 1.0,
         background: {c['pannello2']}; border: 1px solid {c['bordo']}; border-radius: 9px;
         padding: 7px 16px; color: {c['testo2']};
     }}
+    QPushButton#Suggerita {{
+        background: {c['pannello2']}; border: 1px dashed {c['bordo']};
+        border-radius: 13px; padding: 5px 12px; color: {c['testo2']};
+        font-size: {p(11.5)};
+    }}
+    QPushButton#Suggerita:hover {{
+        border-color: {c['accento']}; color: {c['accento']}; border-style: solid;
+    }}
+    QPushButton#IconaCategoria {{
+        background: {c['pannello2']}; border: 1px solid {c['bordo']};
+        border-radius: 10px; font-size: {p(19)};
+    }}
+    QPushButton#IconaCategoria:hover {{ border-color: {c['accento']}; }}
+    QPushButton#CampioneColore {{ border-radius: 9px; }}
     QToolButton#CampioneIcone {{
         background: {c['pannello2']}; border: 2px solid {c['bordo']};
         border-radius: 11px; padding: 10px 12px 7px 12px; color: {c['testo2']};

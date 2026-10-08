@@ -177,9 +177,13 @@ La pagina è divisa in quattro schede, così ogni comando è a un clic di distan
 - **Conti** — campo di aggiunta rapida (scrivi il nome e premi Invio), doppio clic su
   una riga per modificarla, rinomina che aggiorna automaticamente i movimenti
   collegati, eliminazione che chiede su quale conto spostare i movimenti esistenti.
-- **Categorie** — filtri *Tutte / Uscite / Entrate*, ricerca per nome, **icona** e colore
-  visibili in tabella, conteggio dei movimenti per categoria, **Unisci in…** per spostare
-  tutti i movimenti in un'altra categoria ed eliminare quella vecchia in un solo passaggio.
+- **Categorie** — la barra «Nuova categoria» mostra icona, nome, tipo, colore e
+  anteprima dal vivo: l'icona segue quello che scrivi (puoi sempre sceglierla a mano),
+  il colore è il primo libero della tavolozza, `Invio` crea la categoria e lascia il
+  campo pronto per la successiva. Accanto, le **categorie suggerite** più comuni non
+  ancora presenti si aggiungono con un clic. Sotto: filtri *Tutte / Uscite / Entrate*,
+  ricerca per nome, icona e colore in tabella, conteggio dei movimenti e **Unisci in…**
+  per spostare tutti i movimenti in un'altra categoria ed eliminare quella vecchia.
   Ogni categoria ha un'icona: creandone una nuova l'app ne propone una in base al nome
   («Benzina» → ⛽, «Netflix» → 📺, «Multa» → ⚠) e il pulsante *Icona rapida* apre il
   catalogo di 174 icone divise in dodici gruppi, con ricerca per nome o sinonimo
