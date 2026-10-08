@@ -91,8 +91,8 @@ class FinestraPrincipale(QMainWindow):
         # a barra chiusa resta solo il simbolo dell'app, centrato e cliccabile
         self.b_logo = QPushButton()
         self.b_logo.setObjectName("LogoApp")
-        self.b_logo.setFixedSize(40, 36)
-        self.b_logo.setIconSize(QSize(26, 26))
+        self.b_logo.setFixedSize(46, 42)
+        self.b_logo.setIconSize(QSize(32, 32))
         self.b_logo.setCursor(Qt.PointingHandCursor)
         self.b_logo.setToolTip("Apri il menu  (Ctrl+B)")
         self.b_logo.clicked.connect(self.commuta_barra)
@@ -166,6 +166,9 @@ class FinestraPrincipale(QMainWindow):
             self.barra.setFixedWidth(LARGHEZZA_CHIUSA if chiusa else LARGHEZZA_APERTA)
         self.b_menu.setVisible(not chiusa)
         self.b_logo.setVisible(chiusa)
+        # da chiusa la testata non ha margini: il simbolo resta sull'asse
+        self.lay_testa.setContentsMargins(*((0, 0, 0, 0) if chiusa else (6, 0, 0, 0)))
+        self.testata.setFixedHeight(44 if chiusa else 40)
         # da chiusa lo spazio a sinistra si espande: il simbolo resta al centro
         self.spazio_testa.changeSize(
             0, 0, QSizePolicy.Expanding if chiusa else QSizePolicy.Fixed,
