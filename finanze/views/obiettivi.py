@@ -108,10 +108,7 @@ class VistaObiettivi(VistaBase):
         righe = self.db.query("SELECT * FROM obiettivi ORDER BY id DESC")
         if not righe:
             sc = Scheda()
-            sc.aggiungi(etichetta(
-                "Nessun obiettivo impostato.\n\nUsa «Nuovo obiettivo» per definire un "
-                "traguardo di risparmio: l'app calcola l'avanzamento e quanto "
-                "accantonare ogni mese per rispettare la scadenza.", "NotaScheda"))
+            sc.aggiungi(etichetta("Nessun obiettivo di risparmio.", "NotaScheda"))
             self.griglia.addWidget(sc, 0, 0)
             self.et_totale.setText("")
             return

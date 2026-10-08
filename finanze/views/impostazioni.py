@@ -211,7 +211,7 @@ class VistaImpostazioni(VistaBase):
 
         sc = Scheda()
         self.in_conto = QLineEdit()
-        self.in_conto.setPlaceholderText("Nome del nuovo conto, poi Invio")
+        self.in_conto.setPlaceholderText("Nome del conto")
         self.in_tipo_conto = QComboBox(); self.in_tipo_conto.addItems(TIPI_CONTO)
         self.in_saldo = QDoubleSpinBox()
         self.in_saldo.setRange(-99_999_999, 99_999_999)
@@ -234,10 +234,10 @@ class VistaImpostazioni(VistaBase):
         b_mod = QPushButton("Modifica")
         b_rinomina = QPushButton("Rinomina")
         b_del = QPushButton("Elimina"); b_del.setObjectName("Pericolo")
-        nota = QLabel("Doppio clic su una riga per modificarla. "
-                      "Rinominando un conto i movimenti collegati vengono aggiornati.")
-        nota.setObjectName("NotaScheda")
-        sc_tab.aggiungi_layout(riga(b_mod, b_rinomina, b_del, None, nota))
+        self.tab_conti.setToolTip(
+            "Doppio clic per modificare un conto.\n"
+            "Rinominandolo, i movimenti collegati vengono aggiornati.")
+        sc_tab.aggiungi_layout(riga(b_mod, b_rinomina, b_del, None))
         lay.addWidget(sc_tab, 1)
 
         b_add.clicked.connect(self.aggiungi_conto)
@@ -259,27 +259,37 @@ class VistaImpostazioni(VistaBase):
         self._colore_nuova = PALETTE_GRAFICI[0]
 
         griglia = QGridLayout()
-        griglia.setHorizontalSpacing(12)
-        griglia.setVerticalSpacing(4)
-        for colonna, testo in enumerate(("ICONA", "NOME", "TIPO", "COLORE")):
+        griglia.setHorizontalSpacing(14)
+        griglia.setVerticalSpacing(6)
+        ALTEZZA = 42
+
+        def intestazione(testo: str, colonna: int, allineamento=Qt.AlignLeft):
             et = QLabel(testo)
             et.setObjectName("EtichettaScheda")
+            et.setAlignment(allineamento | Qt.AlignVCenter)
             griglia.addWidget(et, 0, colonna)
 
+        # icona e nome formano un blocco unico: l'icona è il prefisso del campo
+        intestazione("NOME DELLA CATEGORIA", 0)
+        blocco_nome = QWidget()
+        fila_nome = QHBoxLayout(blocco_nome)
+        fila_nome.setContentsMargins(0, 0, 0, 0)
+        fila_nome.setSpacing(8)
         self.b_icona_nuova = QPushButton()
         self.b_icona_nuova.setObjectName("IconaCategoria")
-        self.b_icona_nuova.setFixedSize(54, 42)
+        self.b_icona_nuova.setFixedSize(52, ALTEZZA)
         self.b_icona_nuova.setToolTip(
-            "L'icona segue il nome che scrivi: clic per sceglierla fra 174")
-        griglia.addWidget(self.b_icona_nuova, 1, 0)
-
+            "L'icona segue il nome: clic per sceglierla fra 174")
         self.in_cat = QLineEdit()
         self.in_cat.setPlaceholderText("es. Abbonamenti, Palestra, Benzina…")
         self.in_cat.setClearButtonEnabled(True)
-        self.in_cat.setMinimumHeight(42)
-        self.in_cat.setMinimumWidth(260)
-        griglia.addWidget(self.in_cat, 1, 1)
+        self.in_cat.setMinimumHeight(ALTEZZA)
+        self.in_cat.setMinimumWidth(240)
+        fila_nome.addWidget(self.b_icona_nuova)
+        fila_nome.addWidget(self.in_cat, 1)
+        griglia.addWidget(blocco_nome, 1, 0)
 
+        intestazione("TIPO", 1)
         self.gruppo_tipo_nuova = QButtonGroup(self)
         contenitore_tipo = QWidget()
         fila_tipo = QHBoxLayout(contenitore_tipo)
@@ -290,29 +300,28 @@ class VistaImpostazioni(VistaBase):
             b.setObjectName("Segmento")
             b.setCheckable(True)
             b.setChecked(i == 0)
-            b.setMinimumHeight(42)
+            b.setFixedHeight(ALTEZZA)
+            b.setMinimumWidth(86)
             self.gruppo_tipo_nuova.addButton(b, i)
             fila_tipo.addWidget(b)
-        griglia.addWidget(contenitore_tipo, 1, 2)
+        griglia.addWidget(contenitore_tipo, 1, 1)
 
+        intestazione("COLORE", 2, Qt.AlignHCenter)
         self.b_colore_nuova = QPushButton()
         self.b_colore_nuova.setObjectName("CampioneColore")
-        self.b_colore_nuova.setFixedSize(54, 42)
+        self.b_colore_nuova.setFixedSize(52, ALTEZZA)
         self.b_colore_nuova.setToolTip("Colore usato nei grafici: clic per cambiarlo")
-        griglia.addWidget(self.b_colore_nuova, 1, 3)
+        griglia.addWidget(self.b_colore_nuova, 1, 2, Qt.AlignHCenter)
 
-        b_add = QPushButton("Aggiungi categoria")
+        b_add = QPushButton("Aggiungi")
         b_add.setObjectName("Primario")
-        b_add.setMinimumHeight(42)
-        b_add.setMinimumWidth(170)
-        griglia.addWidget(b_add, 1, 4)
-        griglia.setColumnStretch(1, 1)
-        griglia.setColumnStretch(5, 0)
-        sc.aggiungi_layout(griglia)
+        b_add.setFixedHeight(ALTEZZA)
+        b_add.setMinimumWidth(150)
+        b_add.setToolTip("Aggiunge la categoria  ·  Invio")
+        griglia.addWidget(b_add, 1, 3)
 
-        sc.aggiungi(etichetta(
-            "Scrivi il nome e premi Invio: icona e colore vengono scelti per te, "
-            "ma puoi cambiarli con un clic prima di aggiungere.", "NotaScheda"))
+        griglia.setColumnStretch(0, 1)
+        sc.aggiungi_layout(griglia)
         lay.addWidget(sc)
 
         sc_tab = Scheda("Categorie")
@@ -342,10 +351,10 @@ class VistaImpostazioni(VistaBase):
         b_colore = QPushButton("Colore rapido")
         b_unisci = QPushButton("Unisci in…")
         b_del = QPushButton("Elimina"); b_del.setObjectName("Pericolo")
-        nota = QLabel("Doppio clic per modificare nome, icona, tipo e colore. "
-                      "«Unisci» sposta tutti i movimenti in un'altra categoria.")
-        nota.setObjectName("NotaScheda")
-        sc_tab.aggiungi_layout(riga(b_mod, b_icona, b_colore, b_unisci, b_del, None, nota))
+        self.tab_cat.setToolTip("Doppio clic per modificare nome, icona, tipo e colore.")
+        b_unisci.setToolTip("Sposta tutti i movimenti in un'altra categoria "
+                            "ed elimina questa")
+        sc_tab.aggiungi_layout(riga(b_mod, b_icona, b_colore, b_unisci, b_del, None))
         lay.addWidget(sc_tab, 1)
 
         b_add.clicked.connect(self.aggiungi_categoria)
@@ -369,6 +378,7 @@ class VistaImpostazioni(VistaBase):
         lay.setContentsMargins(12, 14, 12, 12)
 
         sc_tema = Scheda("Tema")
+        sc_tema.setToolTip("Si applica subito a tutta l'applicazione · Ctrl+T")
         self.gruppo_tema = QButtonGroup(self)
         fila = riga()
         for i, nome in enumerate(("scuro", "chiaro")):
@@ -378,9 +388,6 @@ class VistaImpostazioni(VistaBase):
             fila.addWidget(b)
         fila.addStretch(1)
         sc_tema.aggiungi_layout(fila)
-        sc_tema.aggiungi(etichetta("Il tema si applica immediatamente a tutta "
-                                   "l'applicazione. Scorciatoia: Ctrl+T da "
-                                   "qualunque pagina.", "NotaScheda"))
         lay.addWidget(sc_tema)
 
         sc_colore = Scheda("Colore principale")
@@ -398,9 +405,6 @@ class VistaImpostazioni(VistaBase):
             griglia_colori.addWidget(b, i // 5, i % 5)
         griglia_colori.setColumnStretch(5, 1)
         sc_colore.aggiungi_layout(griglia_colori)
-        sc_colore.aggiungi(etichetta(
-            "Tinta di pulsanti, selezioni, barre e grafico dell'andamento. "
-            "Si applica subito a tutta l'applicazione.", "NotaScheda"))
         lay.addWidget(sc_colore)
 
         sc_icone = Scheda("Stile delle icone")
@@ -426,12 +430,10 @@ class VistaImpostazioni(VistaBase):
             griglia_stili.addWidget(b, i // 5, i % 5)
         griglia_stili.setColumnStretch(5, 1)
         sc_icone.aggiungi_layout(griglia_stili)
-        sc_icone.aggiungi(etichetta(
-            "Tratto delle icone del menu laterale. Le anteprime mostrano tutte "
-            "le icone nello stile corrispondente.", "NotaScheda"))
         lay.addWidget(sc_icone)
 
         sc_testo = Scheda("Dimensione del testo")
+        sc_testo.setToolTip("Ingrandisce testi e comandi di tutta l'applicazione")
         self.gruppo_scala = QButtonGroup(self)
         fila2 = riga()
         for i, nome in enumerate(SCALE):
@@ -441,9 +443,6 @@ class VistaImpostazioni(VistaBase):
             fila2.addWidget(b)
         fila2.addStretch(1)
         sc_testo.aggiungi_layout(fila2)
-        sc_testo.aggiungi(etichetta("Utile su schermi ad alta risoluzione: "
-                                    "ingrandisce testi e comandi di tutta l'app.",
-                                    "NotaScheda"))
         lay.addWidget(sc_testo)
 
         sc_val = Scheda("Valuta")
@@ -454,8 +453,6 @@ class VistaImpostazioni(VistaBase):
         self.anteprima_valuta = QLabel("")
         self.anteprima_valuta.setObjectName("Pillola")
         sc_val.aggiungi_layout(riga(self.cmb_valuta, self.anteprima_valuta, None))
-        sc_val.aggiungi(etichetta("Il simbolo viene applicato subito a importi, "
-                                 "grafici e tabelle.", "NotaScheda"))
         lay.addWidget(sc_val)
         lay.addStretch(1)
 
@@ -492,20 +489,18 @@ class VistaImpostazioni(VistaBase):
         b_json = QPushButton("Esporta tutto in JSON")
         b_csv = QPushButton("Esporta movimenti in CSV")
         b_imp = QPushButton("Importa movimenti da CSV…")
+        b_imp.setToolTip("Colonne attese: data;tipo;importo;categoria;conto;descrizione\n"
+                         "Date accettate come gg/mm/aaaa o aaaa-mm-gg")
         sc_scambio.aggiungi_layout(riga(b_json, b_csv, b_imp, None))
-        sc_scambio.aggiungi(etichetta(
-            "CSV atteso: data;tipo;importo;categoria;conto;descrizione — "
-            "le date sono accettate come gg/mm/aaaa o aaaa-mm-gg.", "NotaScheda"))
         lay.addWidget(sc_scambio)
 
         sc_pericolo = Scheda("Operazioni irreversibili")
+        sc_pericolo.setToolTip("Prima di ogni operazione viene creato "
+                               "automaticamente un backup")
         b_azzera = QPushButton("Azzera tutti i movimenti")
         b_azzera.setObjectName("Pericolo")
         b_reset = QPushButton("Ripristina categorie predefinite")
         sc_pericolo.aggiungi_layout(riga(b_azzera, b_reset, None))
-        sc_pericolo.aggiungi(etichetta(
-            "Prima di ogni operazione distruttiva viene creato automaticamente "
-            "un backup nella cartella dei dati.", "NotaScheda"))
         lay.addWidget(sc_pericolo)
 
         sc_priv = Scheda("Privacy")

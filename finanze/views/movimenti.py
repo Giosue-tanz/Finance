@@ -102,7 +102,7 @@ class VistaMovimenti(VistaBase):
         self.q_importo.setSuffix(f" {self.valuta}")
 
         self.q_descrizione = QLineEdit()
-        self.q_descrizione.setPlaceholderText("Descrizione (es. Supermercato) — Invio per salvare")
+        self.q_descrizione.setPlaceholderText("Descrizione")
         self.q_categoria = QComboBox(); self.q_categoria.setMinimumWidth(170)
         self.q_conto = QComboBox(); self.q_conto.setMinimumWidth(140)
         self.q_data = QDateEdit(QDate.currentDate())
@@ -168,7 +168,8 @@ class VistaMovimenti(VistaBase):
         fila.addStretch(1)
 
         self.f_testo = QLineEdit()
-        self.f_testo.setPlaceholderText("Cerca descrizione o etichetta…  (Ctrl+F)")
+        self.f_testo.setPlaceholderText("Cerca…")
+        self.f_testo.setToolTip("Cerca nelle descrizioni e nelle etichette  ·  Ctrl+F")
         self.f_testo.setClearButtonEnabled(True)
         self.f_testo.setMinimumWidth(240)
         fila.addWidget(self.f_testo)

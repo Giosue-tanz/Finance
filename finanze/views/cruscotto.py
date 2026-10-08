@@ -353,9 +353,8 @@ class VistaCruscotto(VistaBase):
 
         budget = self.db.query("SELECT * FROM budget WHERE mensile > 0 ORDER BY mensile DESC")
         if not budget:
-            self.lay_budget.addWidget(etichetta(
-                "Nessun budget impostato.\nVai in «Budget» per definire i limiti "
-                "mensili per categoria.", "NotaScheda"))
+            self.lay_budget.addWidget(etichetta("Nessun budget impostato.",
+                                                "NotaScheda"))
             self.lay_budget.addStretch(1)
             return
 

@@ -166,10 +166,6 @@ class VistaBudget(VistaBase):
             b.setChecked(i == 0)
             self.gruppo_filtri.addButton(b, i)
             fila.addWidget(b)
-        aiuto = etichetta(
-            "Doppio clic per cambiare un limite · Canc per rimuoverlo · "
-            "«Fine mese» è la stima al ritmo attuale", "NotaScheda")
-        fila.addWidget(aiuto)
         fila.addStretch(1)
         self.et_avvisi = QLabel(""); self.et_avvisi.setObjectName("NotaScheda")
         fila.addWidget(self.et_avvisi)
@@ -197,6 +193,8 @@ class VistaBudget(VistaBase):
         self.tab.setAlternatingRowColors(True)
         self.tab.setSortingEnabled(True)
         self.tab.setMinimumHeight(110)
+        self.tab.setToolTip("Doppio clic per cambiare un limite · Canc per rimuoverlo\n"
+                            "«Fine mese» è la stima di spesa al ritmo attuale")
         self.tab.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tab.customContextMenuRequested.connect(self._menu)
         self.tab.doubleClicked.connect(self.modifica)
