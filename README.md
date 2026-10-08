@@ -181,8 +181,9 @@ La pagina è divisa in quattro schede, così ogni comando è a un clic di distan
   visibili in tabella, conteggio dei movimenti per categoria, **Unisci in…** per spostare
   tutti i movimenti in un'altra categoria ed eliminare quella vecchia in un solo passaggio.
   Ogni categoria ha un'icona: creandone una nuova l'app ne propone una in base al nome
-  («Benzina» → ⛽, «Netflix» → 📺, «Dentista» → 🦷) e il pulsante *Icona rapida* apre una
-  griglia di 82 icone divise per argomento. Le icone compaiono poi in tutta
+  («Benzina» → ⛽, «Netflix» → 📺, «Multa» → ⚠) e il pulsante *Icona rapida* apre il
+  catalogo di 174 icone divise in dodici gruppi, con ricerca per nome o sinonimo
+  («benzina» trova il carburante, «cane» trova gli animali). Le icone compaiono poi in tutta
   l'applicazione: movimenti, budget, grafici e rapporti.
 - **Aspetto** — tutte le preferenze visive in un posto solo: tema chiaro/scuro,
   **colore principale** fra nove tinte (verde di default, poi blu, turchese, viola,
