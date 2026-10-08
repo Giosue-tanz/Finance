@@ -95,17 +95,35 @@ CREATE INDEX IF NOT EXISTS idx_mov_cat ON movimenti(categoria);
 """
 
 CATEGORIE_DEFAULT = [
+    # entrate
     ("Stipendio", "entrata", "#2fbf71", "💼"),
     ("Rimborsi", "entrata", "#4cc9a4", "💸"),
     ("Investimenti", "entrata", "#86d39b", "📈"),
+    ("Bonus", "entrata", "#6ddfa0", "💰"),
+    ("Vendite", "entrata", "#39b88a", "🏷"),
+    ("Affitti", "entrata", "#8fd4b0", "🏠"),
+    ("Interessi", "entrata", "#5fcf9e", "🏦"),
     ("Altre entrate", "entrata", "#b7e4c7", "💰"),
+    # uscite
     ("Casa", "uscita", "#ef6f6c", "🏠"),
     ("Spesa alimentare", "uscita", "#f2994a", "🛒"),
     ("Trasporti", "uscita", "#f2c14e", "🚗"),
+    ("Carburante", "uscita", "#e8a33d", "⛽"),
     ("Bollette", "uscita", "#c77dff", "💡"),
+    ("Abbonamenti", "uscita", "#b388eb", "📺"),
     ("Salute", "uscita", "#56cfe1", "💊"),
+    ("Farmacia", "uscita", "#64c7d8", "💊"),
+    ("Palestra", "uscita", "#4cb5c4", "🏋"),
     ("Tempo libero", "uscita", "#ff9ecd", "🎬"),
+    ("Ristoranti", "uscita", "#f08a7a", "🍽"),
+    ("Viaggi", "uscita", "#7ec8e3", "✈"),
+    ("Abbigliamento", "uscita", "#f58fb0", "👕"),
+    ("Regali", "uscita", "#ffb4a2", "🎁"),
+    ("Animali", "uscita", "#c9a227", "🐾"),
     ("Istruzione", "uscita", "#7f8cff", "📚"),
+    ("Assicurazioni", "uscita", "#8d99ae", "⚖"),
+    ("Tasse", "uscita", "#a8763e", "🧾"),
+    ("Manutenzione", "uscita", "#9c7b9c", "🔨"),
     ("Altro", "uscita", "#9aa0a6", "🏷"),
 ]
 

@@ -177,11 +177,13 @@ La pagina è divisa in quattro schede, così ogni comando è a un clic di distan
 - **Conti** — campo di aggiunta rapida (scrivi il nome e premi Invio), doppio clic su
   una riga per modificarla, rinomina che aggiorna automaticamente i movimenti
   collegati, eliminazione che chiede su quale conto spostare i movimenti esistenti.
-- **Categorie** — la barra «Nuova categoria» mostra icona, nome, tipo, colore e
-  anteprima dal vivo: l'icona segue quello che scrivi (puoi sempre sceglierla a mano),
-  il colore è il primo libero della tavolozza, `Invio` crea la categoria e lascia il
-  campo pronto per la successiva. Accanto, le **categorie suggerite** più comuni non
-  ancora presenti si aggiungono con un clic. Sotto: filtri *Tutte / Uscite / Entrate*,
+- **Categorie** — la barra «Nuova categoria» ha i campi etichettati (icona, nome, tipo,
+  colore): l'icona segue quello che scrivi e resta fissa se la scegli a mano, il colore
+  è il primo libero della tavolozza, `Invio` crea la categoria e lascia il campo pronto
+  per la successiva. L'archivio nasce con 28 categorie predefinite (8 entrate e 20
+  uscite, dalle bollette agli abbonamenti, dalla palestra ai viaggi); chi aggiorna da
+  una versione precedente le ottiene con «Ripristina categorie predefinite» in
+  *Dati e backup*. Sotto: filtri *Tutte / Uscite / Entrate*,
   ricerca per nome, icona e colore in tabella, conteggio dei movimenti e **Unisci in…**
   per spostare tutti i movimenti in un'altra categoria ed eliminare quella vecchia.
   Ogni categoria ha un'icona: creandone una nuova l'app ne propone una in base al nome
