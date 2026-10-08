@@ -132,7 +132,7 @@ def foglio_stile(c: dict, scala: float = 1.0,
     #Barra {{ background: {c['pannello']}; border-right: 1px solid {c['bordo']}; }}
     #Titolo {{ font-size: {p(18)}; font-weight: 700; color: {c['testo']}; }}
     #Sottotitolo {{ color: {c['testo2']}; font-size: {p(12)}; }}
-    #Logo {{ font-size: {p(16)}; font-weight: 800; color: {c['accento']}; }}
+    #Logo {{ font-size: {p(19)}; font-weight: 800; color: {c['accento']}; }}
 
     QPushButton#Navigazione {{
         background: transparent; border: none; border-radius: 9px;
@@ -301,6 +301,34 @@ def foglio_stile(c: dict, scala: float = 1.0,
         background: {c['accento']}; color: #ffffff; border-color: {c['accento']};
         font-weight: 600;
     }}
+    QWidget#TestataBarra {{ background: transparent; }}
+    QWidget#PiedeBarra {{ background: transparent; }}
+    QLabel#SaldoBarra {{ font-size: {p(20)}; font-weight: 700; }}
+
+    QFrame#Compositore {{
+        background: {c['pannello2']}; border: 1px solid {c['bordo']};
+        border-radius: 13px;
+    }}
+    QFrame#Compositore QLineEdit#CampoCompositore {{
+        background: transparent; border: none; border-radius: 0;
+        padding: 0 4px; font-size: {p(14)};
+    }}
+    QFrame#DivisoreCompositore {{ background: {c['testo2']}; border: none; }}
+    QPushButton#IconaCompositore {{
+        background: {c['pannello']}; border: 1px solid {c['bordo']};
+        border-radius: 9px; font-size: {p(18)};
+    }}
+    QPushButton#IconaCompositore:hover {{ border-color: {c['accento']}; }}
+    QPushButton#ColoreCompositore {{ border: none; border-radius: 9px; }}
+    QPushButton#AggiungiAccanto {{
+        background: {c['pannello2']}; border: 1px solid {c['bordo']};
+        border-radius: 9px; font-size: {p(15)}; font-weight: 700;
+        color: {c['testo2']}; padding: 0;
+    }}
+    QPushButton#AggiungiAccanto:hover {{
+        border-color: {c['accento']}; color: {c['accento']};
+    }}
+
     QWidget#PistaSegmenti {{
         background: {c['fondo']}; border: 1px solid {c['bordo']}; border-radius: 10px;
     }}

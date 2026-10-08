@@ -5,8 +5,8 @@ from PySide6.QtCore import QDate, QEvent, QModelIndex, QObject, Qt
 from PySide6.QtGui import QFont, QFontMetrics, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QComboBox, QDateEdit, QDialog, QDialogButtonBox,
                                QDoubleSpinBox, QFormLayout, QFrame, QHBoxLayout,
-                               QLabel, QLineEdit, QSizePolicy, QSpinBox,
-                               QVBoxLayout, QWidget)
+                               QLabel, QLineEdit, QPushButton, QSizePolicy,
+                               QSpinBox, QVBoxLayout, QWidget)
 
 from .grafici import Sparkline
 from .icone import etichetta_categoria, solo_nome
@@ -196,6 +196,17 @@ class DialogoMovimento(QDialog):
         self.importo.setSingleStep(10.0)
         self.importo.setSuffix(f" {db.leggi('valuta', '€')}")
         self.categoria = QComboBox(); self.categoria.setEditable(True)
+        self.b_nuova_categoria = QPushButton("+")
+        self.b_nuova_categoria.setObjectName("AggiungiAccanto")
+        self.b_nuova_categoria.setFixedWidth(34)
+        self.b_nuova_categoria.setToolTip("Crea una nuova categoria")
+        self.b_nuova_categoria.clicked.connect(self._nuova_categoria)
+        blocco_categoria = QWidget()
+        fila_categoria = QHBoxLayout(blocco_categoria)
+        fila_categoria.setContentsMargins(0, 0, 0, 0)
+        fila_categoria.setSpacing(6)
+        fila_categoria.addWidget(self.categoria, 1)
+        fila_categoria.addWidget(self.b_nuova_categoria)
         self.conto = QComboBox(); self.conto.addItems(conti)
         self.descrizione = QLineEdit()
         self.descrizione.setPlaceholderText("es. Spesa settimanale")
@@ -207,7 +218,7 @@ class DialogoMovimento(QDialog):
         modulo.addRow("Tipo", self.tipo)
         modulo.addRow("Data", self.data)
         modulo.addRow("Importo", self.importo)
-        modulo.addRow("Categoria", self.categoria)
+        modulo.addRow("Categoria", blocco_categoria)
         modulo.addRow("Conto", self.conto)
         modulo.addRow("Descrizione", self.descrizione)
         modulo.addRow("Etichette", self.etichette)
@@ -242,6 +253,28 @@ class DialogoMovimento(QDialog):
             self.conto.setCurrentText(m["conto"])
             self.descrizione.setText(m["descrizione"])
             self.etichette.setText(m["etichette"])
+
+    def _nuova_categoria(self) -> None:
+        """Crea la categoria al volo e la seleziona, senza chiudere il dialogo."""
+        from .categorie import DialogoNuovaCategoria
+
+        tipo = self.tipo.currentText()
+        scritto = solo_nome(self.categoria.currentText()).strip()
+        gia_presente = any(scritto == self.categoria.itemData(i)
+                           for i in range(self.categoria.count()))
+        dlg = DialogoNuovaCategoria(self.db, tipo,
+                                    "" if gia_presente else scritto, self)
+        if not dlg.exec() or not dlg.nome_creato:
+            return
+        elenco = self.cat_entrata if tipo == "entrata" else self.cat_uscita
+        if dlg.nome_creato not in elenco:
+            elenco.append(dlg.nome_creato)
+            elenco.sort()
+        self.icone = self.db.icone_categorie()
+        self._aggiorna_categorie(tipo)
+        indice = self.categoria.findData(dlg.nome_creato)
+        if indice >= 0:
+            self.categoria.setCurrentIndex(indice)
 
     def _aggiorna_categorie(self, tipo: str) -> None:
         corrente = self.categoria.currentData() or solo_nome(self.categoria.currentText())

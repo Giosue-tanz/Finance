@@ -11,8 +11,8 @@ from PySide6.QtWidgets import (QApplication, QButtonGroup, QHBoxLayout, QLabel,
                                QMessageBox, QPushButton, QStackedWidget,
                                QStatusBar, QVBoxLayout, QWidget)
 
-from .componenti import separatore
 from .icone_nav import STILE_PREDEFINITO, icona, icona_menu
+from .componenti import separatore
 from .db import APP_DIR, DATA_DIR, Database
 from .tema import (ACCENTO_PREDEFINITO, SCALE, colori, foglio_stile,
                    frecce_spin)
@@ -76,29 +76,30 @@ class FinestraPrincipale(QMainWindow):
         self.barra.setObjectName("Barra")
         self.barra.setFixedWidth(LARGHEZZA_APERTA)
         lay = QVBoxLayout(self.barra)
-        lay.setContentsMargins(12, 14, 12, 14)
-        lay.setSpacing(6)
+        lay.setContentsMargins(12, 12, 12, 12)
+        lay.setSpacing(5)
         self.lay_barra = lay
 
-        testa = QHBoxLayout()
+        # testata: nome e pulsante del menu sulla stessa linea di base
+        self.testata = QWidget()
+        self.testata.setObjectName("TestataBarra")
+        self.testata.setFixedHeight(40)
+        testa = QHBoxLayout(self.testata)
+        testa.setContentsMargins(6, 0, 0, 0)
         testa.setSpacing(6)
         self.et_logo = QLabel("Finance")
         self.et_logo.setObjectName("Logo")
         self.b_menu = QPushButton()
         self.b_menu.setObjectName("BottoneMenu")
-        self.b_menu.setFixedSize(32, 30)
+        self.b_menu.setFixedSize(32, 32)
         self.b_menu.setIconSize(QSize(19, 19))
         self.b_menu.setToolTip("Apri o chiudi il menu  (Ctrl+B)")
         self.b_menu.clicked.connect(self.commuta_barra)
         testa.addWidget(self.et_logo)
         testa.addStretch(1)
         testa.addWidget(self.b_menu)
-        lay.addLayout(testa)
-
-        self.et_archivio = QLabel("archivio locale")
-        self.et_archivio.setObjectName("Sottotitolo")
-        lay.addWidget(self.et_archivio)
-        lay.addSpacing(12)
+        lay.addWidget(self.testata)
+        lay.addSpacing(10)
 
         self.gruppo = QButtonGroup(self)
         self.gruppo.setExclusive(True)
@@ -114,14 +115,22 @@ class FinestraPrincipale(QMainWindow):
             lay.addWidget(b)
 
         lay.addStretch(1)
+
+        # piede: saldo totale allineato al testo delle voci di navigazione
         self.separatore_barra = separatore()
         lay.addWidget(self.separatore_barra)
-        self.et_saldo_nota = QLabel("saldo complessivo")
-        self.et_saldo_nota.setObjectName("NotaScheda")
+        self.riquadro_saldo = QWidget()
+        self.riquadro_saldo.setObjectName("PiedeBarra")
+        piede = QVBoxLayout(self.riquadro_saldo)
+        piede.setContentsMargins(14, 10, 14, 2)
+        piede.setSpacing(1)
+        self.et_saldo_nota = QLabel("SALDO TOTALE")
+        self.et_saldo_nota.setObjectName("EtichettaScheda")
         self.et_saldo = QLabel("—")
-        self.et_saldo.setObjectName("ValoreScheda")
-        lay.addWidget(self.et_saldo_nota)
-        lay.addWidget(self.et_saldo)
+        self.et_saldo.setObjectName("SaldoBarra")
+        piede.addWidget(self.et_saldo_nota)
+        piede.addWidget(self.et_saldo)
+        lay.addWidget(self.riquadro_saldo)
 
         self.barra_chiusa = self.db.leggi("barra_chiusa", "0") == "1"
         self._disegna_barra()
@@ -139,9 +148,10 @@ class FinestraPrincipale(QMainWindow):
             self.barra.setFixedWidth(LARGHEZZA_CHIUSA if chiusa else LARGHEZZA_APERTA)
         self.b_menu.setIcon(icona_menu(self.c["testo2"], not chiusa))
         self.et_logo.setVisible(not chiusa)
-        self.et_archivio.setVisible(not chiusa)
         self.et_saldo_nota.setVisible(not chiusa)
-        self.separatore_barra.setVisible(True)   # anche da chiusa separa il saldo
+        self.separatore_barra.setVisible(True)
+        self.riquadro_saldo.layout().setContentsMargins(
+            *((0, 10, 0, 2) if chiusa else (14, 10, 14, 2)))
         self.lay_barra.setContentsMargins(*((8, 14, 8, 16) if chiusa
                                             else (12, 14, 12, 14)))
         self.lay_barra.setSpacing(5 if chiusa else 6)
@@ -261,7 +271,7 @@ class FinestraPrincipale(QMainWindow):
         if getattr(self, "barra_chiusa", False):
             self.et_saldo.setText(compatto(saldo))
             self.et_saldo.setAlignment(Qt.AlignCenter)
-            self.et_saldo.setToolTip(f"Saldo complessivo: {euro(saldo, v)}")
+            self.et_saldo.setToolTip(f"Saldo totale: {euro(saldo, v)}")
             colore = self.c["entrata"] if saldo >= 0 else self.c["uscita"]
             self.et_saldo.setStyleSheet(
                 f"color: {colore}; font-size: 12px; font-weight: 700;")

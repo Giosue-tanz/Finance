@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox,
                                QLabel, QLineEdit, QMenu, QMessageBox, QPushButton,
                                QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
+from ..categorie import DialogoNuovaCategoria
 from ..componenti import (DialogoMovimento, Scheda, abilita_deselezione,
                           etichetta, riga)
 from ..icone import etichetta_categoria, solo_nome
@@ -104,6 +105,11 @@ class VistaMovimenti(VistaBase):
         self.q_descrizione = QLineEdit()
         self.q_descrizione.setPlaceholderText("Descrizione")
         self.q_categoria = QComboBox(); self.q_categoria.setMinimumWidth(170)
+        self.b_nuova_cat = QPushButton("+")
+        self.b_nuova_cat.setObjectName("AggiungiAccanto")
+        self.b_nuova_cat.setFixedWidth(34)
+        self.b_nuova_cat.setToolTip("Crea una nuova categoria")
+        self.b_nuova_cat.clicked.connect(self.nuova_categoria)
         self.q_conto = QComboBox(); self.q_conto.setMinimumWidth(140)
         self.q_data = QDateEdit(QDate.currentDate())
         self.q_data.setCalendarPopup(True)
@@ -117,8 +123,8 @@ class VistaMovimenti(VistaBase):
         b_dettagli.clicked.connect(self.nuovo)
 
         sc.aggiungi_layout(riga(self.q_tipo, self.q_importo, self.q_descrizione,
-                                self.q_categoria, self.q_conto, self.q_data,
-                                b_salva, b_dettagli))
+                                self.q_categoria, self.b_nuova_cat, self.q_conto,
+                                self.q_data, b_salva, b_dettagli))
         for campo in (self.q_descrizione, self.q_importo):
             campo.setToolTip("Invio salva il movimento")
         self.q_descrizione.returnPressed.connect(self.inserimento_rapido)
@@ -480,6 +486,20 @@ class VistaMovimenti(VistaBase):
         self._messaggio(
             f"{'Entrata' if self._tipo_rapido == 'entrata' else 'Uscita'} di "
             f"{euro(importo, self.valuta)} registrata in «{categoria}».")
+        self.dati_cambiati.emit()
+
+    def nuova_categoria(self) -> None:
+        """Crea una categoria senza lasciare la pagina e la seleziona subito."""
+        dlg = DialogoNuovaCategoria(self.db, self._tipo_rapido,
+                                    parent=self)
+        if not dlg.exec() or not dlg.nome_creato:
+            return
+        self._firma_elenchi = ""            # forza il ricarico delle tendine
+        self._carica_elenchi()
+        indice = self.q_categoria.findData(dlg.nome_creato)
+        if indice >= 0:
+            self.q_categoria.setCurrentIndex(indice)
+        self._messaggio(f"Categoria «{dlg.nome_creato}» creata e selezionata.")
         self.dati_cambiati.emit()
 
     def _elenchi_dialogo(self) -> tuple[list[str], list[str], list[str]]:
