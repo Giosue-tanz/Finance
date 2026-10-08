@@ -301,6 +301,18 @@ def foglio_stile(c: dict, scala: float = 1.0,
         background: {c['accento']}; color: #ffffff; border-color: {c['accento']};
         font-weight: 600;
     }}
+    QWidget#PistaSegmenti {{
+        background: {c['fondo']}; border: 1px solid {c['bordo']}; border-radius: 10px;
+    }}
+    QPushButton#SegmentoPista {{
+        background: transparent; border: none; border-radius: 7px;
+        color: {c['testo2']}; padding: 0 10px; font-weight: 500;
+    }}
+    QPushButton#SegmentoPista:hover {{ background: {trasparente(c['testo2'], 0.12)}; }}
+    QPushButton#SegmentoPista:checked {{
+        background: {c['accento']}; color: #ffffff; font-weight: 700;
+    }}
+    QPushButton#SegmentoPista:checked:hover {{ background: {c['accento']}; }}
     QLabel#Buono {{ color: {c['entrata']}; font-weight: 600; }}
     QMenu {{ background: {c['pannello']}; border: 1px solid {c['bordo']}; padding: 6px; }}
     QMenu::item {{ padding: 7px 18px; border-radius: 6px; }}
