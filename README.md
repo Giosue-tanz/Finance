@@ -186,8 +186,10 @@ La pagina è divisa in quattro schede, così ogni comando è a un clic di distan
   l'applicazione: movimenti, budget, grafici e rapporti.
 - **Aspetto** — tutte le preferenze visive in un posto solo: tema chiaro/scuro,
   **colore principale** fra nove tinte (verde di default, poi blu, turchese, viola,
-  magenta, arancio, rosso, ambra, grafite), dimensione del testo (compatta, normale,
-  grande, molto grande) e simbolo di valuta con anteprima. Ogni scelta si applica
+  magenta, arancio, rosso, ambra, grafite), **stile delle icone** del menu fra cinque
+  tratti (sottile, medio, spesso, tenue, pieno) con l'anteprima di tutte le icone su
+  ogni campione, dimensione del testo (compatta, normale, grande, molto grande) e
+  simbolo di valuta con anteprima. Ogni scelta si applica
   immediatamente all'intera applicazione e viene salvata.
 - **Dati e backup** — percorso e dimensione dell'archivio, conteggi, data dell'ultimo
   backup, backup immediato in un clic, apertura della cartella dati, ripristino,

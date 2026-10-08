@@ -221,3 +221,24 @@ def icona_menu(colore: str, aperta: bool, lato: int = 20,
     ic = QIcon()
     ic.addPixmap(pixmap)
     return ic
+
+
+def anteprima_stile(stile: str, colore: str, lato: int = 19,
+                    spaziatura: int = 8, colonne: int = 4) -> QPixmap:
+    """Tutte le icone di un certo stile, disposte su una griglia compatta."""
+    dpr = _fattore_schermo()
+    nomi = list(DISEGNI)
+    righe = (len(nomi) + colonne - 1) // colonne
+    larghezza = colonne * lato + (colonne - 1) * spaziatura
+    altezza = righe * lato + (righe - 1) * spaziatura
+    tela = QPixmap(int(larghezza * dpr), int(altezza * dpr))
+    tela.fill(Qt.transparent)
+    tela.setDevicePixelRatio(dpr)
+    p = QPainter(tela)
+    p.setRenderHint(QPainter.Antialiasing, True)
+    for i, nome in enumerate(nomi):
+        x = (i % colonne) * (lato + spaziatura)
+        y = (i // colonne) * (lato + spaziatura)
+        p.drawPixmap(x, y, _pixmap(nome, colore, lato, stile))
+    p.end()
+    return tela

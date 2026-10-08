@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QApplication, QButtonGroup, QHBoxLayout, QLabel,
                                QStatusBar, QVBoxLayout, QWidget)
 
 from .componenti import separatore
-from .icone_nav import icona, icona_menu
+from .icone_nav import STILE_PREDEFINITO, icona, icona_menu
 from .db import APP_DIR, DATA_DIR, Database
 from .tema import (ACCENTO_PREDEFINITO, SCALE, colori, foglio_stile,
                    frecce_spin)
@@ -306,10 +306,12 @@ class FinestraPrincipale(QMainWindow):
         return p
 
     def _aggiorna_icone(self) -> None:
-        """Ridisegna le icone con i colori del tema corrente."""
+        """Ridisegna le icone con i colori del tema e lo stile scelti."""
+        stile = self.db.leggi("stile_icone", STILE_PREDEFINITO)
         for (nome_icona, _), b in zip(VISTE, self.pulsanti):
-            b.setIcon(icona(nome_icona, self.c["testo2"], "#ffffff"))
-        self.b_menu.setIcon(icona_menu(self.c["testo2"], not self.barra_chiusa))
+            b.setIcon(icona(nome_icona, self.c["testo2"], "#ffffff", stile=stile))
+        self.b_menu.setIcon(icona_menu(self.c["testo2"], not self.barra_chiusa,
+                                       stile=stile))
 
     def applica_tema(self, nome: str) -> None:
         self.c = colori(nome, self.db.leggi("accento", ACCENTO_PREDEFINITO))

@@ -13,16 +13,18 @@ import subprocess
 from datetime import date, datetime
 
 from PySide6.QtCore import QTimer, Qt, Signal
-from PySide6.QtGui import QColor, QKeySequence, QShortcut
+from PySide6.QtGui import QColor, QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QColorDialog,
                                QComboBox, QDialog, QDialogButtonBox,
                                QDoubleSpinBox, QFileDialog, QFormLayout,
                                QHeaderView, QInputDialog, QLabel, QLineEdit,
                                QMessageBox, QPushButton, QTableWidget,
-                               QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget)
+                               QGridLayout, QScrollArea, QTableWidgetItem, QTabWidget, QToolButton,
+                               QVBoxLayout, QWidget)
 
 from ..componenti import Scheda, abilita_deselezione, etichetta, riga
 from ..icone import ICONA_PREDEFINITA, SelettoreIcona, icona_suggerita
+from ..icone_nav import STILE_PREDEFINITO, STILI, anteprima_stile
 from ..tema import ACCENTI, ACCENTO_PREDEFINITO, PALETTE_GRAFICI, SCALE
 from ..utils import data_it, esporta_csv, euro, importa_csv
 from . import VistaBase
@@ -167,8 +169,8 @@ class VistaImpostazioni(VistaBase):
         self.schede = QTabWidget()
         self.schede.addTab(self._tab_conti(), "Conti")
         self.schede.addTab(self._tab_categorie(), "Categorie")
-        self.schede.addTab(self._tab_aspetto(), "Aspetto")
-        self.schede.addTab(self._tab_dati(), "Dati e backup")
+        self.schede.addTab(self._scorrevole(self._tab_aspetto()), "Aspetto")
+        self.schede.addTab(self._scorrevole(self._tab_dati()), "Dati e backup")
         lay.addWidget(self.schede, 1)
 
         self.barra_esito = QLabel("")
@@ -178,6 +180,17 @@ class VistaImpostazioni(VistaBase):
         self._timer_esito = QTimer(self)
         self._timer_esito.setSingleShot(True)
         self._timer_esito.timeout.connect(lambda: self.barra_esito.setText(""))
+
+    @staticmethod
+    def _scorrevole(pagina: QWidget) -> QScrollArea:
+        """Avvolge una pagina in un'area scorrevole: senza, quando lo spazio
+        manca Qt comprime le schede fino a sovrapporne i contenuti."""
+        area = QScrollArea()
+        area.setWidgetResizable(True)
+        area.setFrameShape(QScrollArea.NoFrame)
+        area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        area.setWidget(pagina)
+        return area
 
     # ------------------------------------------------------------- messaggi
     def _esito(self, testo: str) -> None:
@@ -313,7 +326,8 @@ class VistaImpostazioni(VistaBase):
         sc_colore = Scheda("Colore principale")
         self.gruppo_accento = QButtonGroup(self)
         self.pulsanti_accento: dict[str, QPushButton] = {}
-        fila_colori = riga()
+        griglia_colori = QGridLayout()
+        griglia_colori.setSpacing(8)
         for i, nome in enumerate(ACCENTI):
             b = QPushButton(nome.capitalize())
             b.setObjectName("Campione")
@@ -321,13 +335,41 @@ class VistaImpostazioni(VistaBase):
             b.setMinimumWidth(96)
             self.gruppo_accento.addButton(b, i)
             self.pulsanti_accento[nome] = b
-            fila_colori.addWidget(b)
-        fila_colori.addStretch(1)
-        sc_colore.aggiungi_layout(fila_colori)
+            griglia_colori.addWidget(b, i // 5, i % 5)
+        griglia_colori.setColumnStretch(5, 1)
+        sc_colore.aggiungi_layout(griglia_colori)
         sc_colore.aggiungi(etichetta(
             "Tinta di pulsanti, selezioni, barre e grafico dell'andamento. "
             "Si applica subito a tutta l'applicazione.", "NotaScheda"))
         lay.addWidget(sc_colore)
+
+        sc_icone = Scheda("Stile delle icone")
+        self.gruppo_stile = QButtonGroup(self)
+        self.pulsanti_stile: dict[str, QToolButton] = {}
+        griglia_stili = QGridLayout()
+        griglia_stili.setSpacing(8)
+        for i, nome in enumerate(STILI):
+            b = QToolButton()
+            b.setObjectName("CampioneIcone")
+            b.setCheckable(True)
+            b.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+            b.setText(nome.capitalize())
+            # dimensioni fissate subito: il riquadro deve nascere già alto
+            # abbastanza, altrimenti la nota sotto finisce sopra le icone
+            anteprima = anteprima_stile(nome, self.c["testo2"])
+            dimensione = anteprima.size() / anteprima.devicePixelRatio()
+            b.setIcon(QIcon(anteprima))
+            b.setIconSize(dimensione)
+            b.setFixedSize(dimensione.width() + 30, dimensione.height() + 42)
+            self.gruppo_stile.addButton(b, i)
+            self.pulsanti_stile[nome] = b
+            griglia_stili.addWidget(b, i // 5, i % 5)
+        griglia_stili.setColumnStretch(5, 1)
+        sc_icone.aggiungi_layout(griglia_stili)
+        sc_icone.aggiungi(etichetta(
+            "Tratto delle icone del menu laterale. Le anteprime mostrano tutte "
+            "le icone nello stile corrispondente.", "NotaScheda"))
+        lay.addWidget(sc_icone)
 
         sc_testo = Scheda("Dimensione del testo")
         self.gruppo_scala = QButtonGroup(self)
@@ -359,6 +401,7 @@ class VistaImpostazioni(VistaBase):
 
         self.gruppo_tema.idClicked.connect(self._imposta_tema)
         self.gruppo_accento.idClicked.connect(self._imposta_accento)
+        self.gruppo_stile.idClicked.connect(self._imposta_stile_icone)
         self.gruppo_scala.idClicked.connect(self._imposta_scala)
         self.cmb_valuta.currentTextChanged.connect(self._imposta_valuta)
         return w
@@ -476,6 +519,16 @@ class VistaImpostazioni(VistaBase):
                 f"background: {tinta}; color: #ffffff; border: 2px solid {bordo}; "
                 f"font-weight: {'700' if scelto else '500'};")
         self.gruppo_accento.blockSignals(False)
+
+        stile_icone = self.db.leggi("stile_icone", STILE_PREDEFINITO)
+        self.gruppo_stile.blockSignals(True)
+        for nome, pulsante in self.pulsanti_stile.items():
+            scelto = nome == stile_icone
+            striscia = anteprima_stile(
+                nome, self.c["accento"] if scelto else self.c["testo2"])
+            pulsante.setIcon(QIcon(striscia))
+            pulsante.setChecked(scelto)
+        self.gruppo_stile.blockSignals(False)
 
         scala = self.db.leggi("scala", "normale")
         nomi = list(SCALE)
@@ -801,6 +854,12 @@ class VistaImpostazioni(VistaBase):
         self.db.imposta("accento", nome)
         self.tema_cambiato.emit(self.db.leggi("tema", "scuro"))
         self._esito(f"Colore principale: {nome}.")
+
+    def _imposta_stile_icone(self, indice: int) -> None:
+        nome = list(STILI)[indice]
+        self.db.imposta("stile_icone", nome)
+        self.aspetto_cambiato.emit()
+        self._esito(f"Stile delle icone: {nome}.")
 
     def _imposta_scala(self, indice: int) -> None:
         nome = list(SCALE)[indice]
