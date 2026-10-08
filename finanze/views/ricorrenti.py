@@ -10,7 +10,8 @@ from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDateEdi
                                QPushButton, QSpinBox, QTableWidget, QTableWidgetItem,
                                QVBoxLayout)
 
-from ..componenti import Scheda, SchedaStat, etichetta, riga
+from ..componenti import (Scheda, SchedaStat, abilita_deselezione, etichetta,
+                          riga)
 from ..ricorrenze import prossima
 from ..utils import data_it, euro
 from . import VistaBase
@@ -150,6 +151,7 @@ class VistaRicorrenti(VistaBase):
         b_del.clicked.connect(self.elimina)
         b_genera.clicked.connect(self.genera)
         self.tab.doubleClicked.connect(self.modifica)
+        abilita_deselezione(self.tab)
 
     # ------------------------------------------------------------------ dati
     def aggiorna(self) -> None:

@@ -15,7 +15,8 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox,
                                QLabel, QLineEdit, QMenu, QMessageBox, QPushButton,
                                QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
-from ..componenti import DialogoMovimento, Scheda, etichetta, riga
+from ..componenti import (DialogoMovimento, Scheda, abilita_deselezione,
+                          etichetta, riga)
 from ..icone import etichetta_categoria, solo_nome
 from ..utils import (anno_corrente, data_it, esporta_csv, euro, importa_csv,
                      mese_corrente)
@@ -244,6 +245,7 @@ class VistaMovimenti(VistaBase):
         for col, larg in ((0, 110), (1, 90), (3, 170), (4, 150), (5, 150), (6, 140)):
             h.resizeSection(col, larg)
         self.tab.sortByColumn(0, Qt.DescendingOrder)
+        abilita_deselezione(self.tab)
         return self.tab
 
     def _scorciatoie(self) -> None:

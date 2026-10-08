@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QColorDialog,
                                QMessageBox, QPushButton, QTableWidget,
                                QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget)
 
-from ..componenti import Scheda, etichetta, riga
+from ..componenti import Scheda, abilita_deselezione, etichetta, riga
 from ..icone import ICONA_PREDEFINITA, SelettoreIcona, icona_suggerita
 from ..tema import ACCENTI, ACCENTO_PREDEFINITO, PALETTE_GRAFICI, SCALE
 from ..utils import data_it, esporta_csv, euro, importa_csv
@@ -443,6 +443,7 @@ class VistaImpostazioni(VistaBase):
         intestazione.setSectionResizeMode(0, QHeaderView.Interactive)
         intestazione.resizeSection(0, larghezza_prima)
         intestazione.setSectionResizeMode(colonne, QHeaderView.Stretch)
+        abilita_deselezione(tab)
 
     def _riga_selezionata(self, tab: QTableWidget, tabella: str):
         sel = tab.selectionModel().selectedRows()

@@ -1,8 +1,8 @@
 """Componenti riutilizzabili dell'interfaccia."""
 from __future__ import annotations
 
-from PySide6.QtCore import QDate, Qt
-from PySide6.QtGui import QFont, QFontMetrics
+from PySide6.QtCore import QDate, QEvent, QModelIndex, QObject, Qt
+from PySide6.QtGui import QFont, QFontMetrics, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QComboBox, QDateEdit, QDialog, QDialogButtonBox,
                                QDoubleSpinBox, QFormLayout, QFrame, QHBoxLayout,
                                QLabel, QLineEdit, QSizePolicy, QSpinBox,
@@ -146,6 +146,30 @@ def etichetta(testo: str, oggetto: str = "") -> QLabel:
     if oggetto:
         e.setObjectName(oggetto)
     return e
+
+
+class _Deselezionatore(QObject):
+    """Annulla la selezione quando si clicca in un punto vuoto della tabella."""
+
+    def eventFilter(self, oggetto, evento):
+        if evento.type() == QEvent.MouseButtonPress:
+            tabella = oggetto.parent()
+            if tabella is not None and not tabella.indexAt(
+                    evento.position().toPoint()).isValid():
+                tabella.clearSelection()
+                tabella.setCurrentIndex(QModelIndex())
+        return False
+
+
+def abilita_deselezione(*tabelle) -> None:
+    """Clic nello spazio vuoto (o Esc) per togliere la selezione."""
+    for tabella in tabelle:
+        filtro = _Deselezionatore(tabella)
+        tabella._filtro_deselezione = filtro        # evita la raccolta rifiuti
+        tabella.viewport().installEventFilter(filtro)
+        scorciatoia = QShortcut(QKeySequence(Qt.Key_Escape), tabella)
+        scorciatoia.setContext(Qt.WidgetWithChildrenShortcut)
+        scorciatoia.activated.connect(tabella.clearSelection)
 
 
 class DialogoMovimento(QDialog):

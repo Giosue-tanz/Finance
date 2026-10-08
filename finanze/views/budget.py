@@ -15,7 +15,8 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox,
                                QStyledItemDelegate, QTableWidget, QTableWidgetItem,
                                QVBoxLayout, QWidget)
 
-from ..componenti import Scheda, SchedaStat, etichetta, riga
+from ..componenti import (Scheda, SchedaStat, abilita_deselezione, etichetta,
+                          riga)
 from ..grafici import GraficoBarre
 from ..icone import etichetta_categoria
 from ..utils import euro, giorni_mese, mese_corrente
@@ -203,6 +204,7 @@ class VistaBudget(VistaBase):
         h = self.tab.horizontalHeader()
         h.setSectionResizeMode(QHeaderView.ResizeToContents)
         h.setSectionResizeMode(4, QHeaderView.Stretch)
+        abilita_deselezione(self.tab)
         self.delegato = DelegatoAvanzamento(self.c, self.tab)
         self.tab.setItemDelegateForColumn(4, self.delegato)
         sc.aggiungi(self.tab, 1)
@@ -219,6 +221,7 @@ class VistaBudget(VistaBase):
         self.tab_senza.setSelectionMode(QAbstractItemView.SingleSelection)
         self.tab_senza.setMinimumHeight(76)
         self.tab_senza.doubleClicked.connect(self.adotta_proposta)
+        abilita_deselezione(self.tab_senza)
         hs = self.tab_senza.horizontalHeader()
         hs.setSectionResizeMode(QHeaderView.ResizeToContents)
         hs.setSectionResizeMode(0, QHeaderView.Stretch)

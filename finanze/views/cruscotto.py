@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QHBoxLayout, QLabel, QMenu, QProgressBar,
                                QPushButton, QTableWidget, QTableWidgetItem,
                                QVBoxLayout, QWidget)
 
-from ..componenti import ContenutoStat, etichetta, riga
+from ..componenti import ContenutoStat, abilita_deselezione, etichetta, riga
 from ..grafici import GraficoBarre, GraficoCiambella, GraficoLinea
 from ..icone import etichetta_categoria
 from ..sezioni import ContenitoreSezioni, Sezione
@@ -135,6 +135,7 @@ class VistaCruscotto(VistaBase):
         h.setStretchLastSection(True)
         h.resizeSection(0, 110); h.resizeSection(1, 280)
         h.resizeSection(2, 180); h.resizeSection(3, 140)
+        abilita_deselezione(self.tab)
         self._aggiungi("ultimi", self.tab)
 
         self.grafici = [self.g_saldo, self.g_torta, self.g_barre]

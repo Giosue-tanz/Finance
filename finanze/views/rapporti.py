@@ -7,7 +7,8 @@ from PySide6.QtCore import QDate, Qt
 from PySide6.QtWidgets import (QAbstractItemView, QComboBox, QDateEdit, QHeaderView,
                                QLabel, QTableWidget, QTableWidgetItem, QVBoxLayout)
 
-from ..componenti import Scheda, SchedaStat, etichetta, riga
+from ..componenti import (Scheda, SchedaStat, abilita_deselezione, etichetta,
+                          riga)
 from ..grafici import GraficoBarre, GraficoCiambella, GraficoLinea
 from ..icone import etichetta_categoria
 from ..utils import (anno_corrente, data_it, etichetta_mese, euro, mese_corrente,
@@ -92,6 +93,7 @@ class VistaRapporti(VistaBase):
         hm.setSectionResizeMode(4, QHeaderView.Stretch)
         for c, l in ((0, 140), (1, 150), (2, 150), (3, 150)):
             hm.resizeSection(c, l)
+        abilita_deselezione(self.tab, self.tab_mesi)
         sc_mesi.aggiungi(self.tab_mesi)
         lay.addWidget(sc_mesi)
         lay.addStretch(1)
