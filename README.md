@@ -116,7 +116,8 @@ Le date sono accettate sia come `gg/mm/aaaa` sia come `aaaa-mm-gg`.
 
 ## Menu laterale
 
-Il pulsante a destra del nome (o `Ctrl+B`) riduce la barra a una colonna di icone:
+Il pulsante a destra del nome (o `Ctrl+B`) riduce la barra a una colonna di icone;
+da chiusa, in cima resta il simbolo dell'applicazione, che la riapre con un clic:
 restano le voci di navigazione, con il nome nel suggerimento, la sezione attiva
 evidenziata e il saldo complessivo in forma compatta in basso. Lo stato aperto o
 chiuso viene ricordato al riavvio.

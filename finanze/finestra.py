@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import os
 
-from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QSize, Qt
+from PySide6.QtCore import (QEasingCurve, QPropertyAnimation, QSize, Qt)
 from PySide6.QtGui import (QAction, QColor, QIcon, QKeySequence, QPalette,
                            QShortcut)
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QHBoxLayout, QLabel,
-                               QMainWindow,
+                               QMainWindow, QSizePolicy, QSpacerItem,
                                QMessageBox, QPushButton, QStackedWidget,
                                QStatusBar, QVBoxLayout, QWidget)
 
@@ -87,17 +87,35 @@ class FinestraPrincipale(QMainWindow):
         testa = QHBoxLayout(self.testata)
         testa.setContentsMargins(6, 0, 0, 0)
         testa.setSpacing(6)
+
+        # a barra chiusa resta solo il simbolo dell'app, centrato e cliccabile
+        self.b_logo = QPushButton()
+        self.b_logo.setObjectName("LogoApp")
+        self.b_logo.setFixedSize(40, 36)
+        self.b_logo.setIconSize(QSize(26, 26))
+        self.b_logo.setCursor(Qt.PointingHandCursor)
+        self.b_logo.setToolTip("Apri il menu  (Ctrl+B)")
+        self.b_logo.clicked.connect(self.commuta_barra)
+        simbolo = os.path.join(APP_DIR, "risorse", "icona.png")
+        if os.path.exists(simbolo):
+            self.b_logo.setIcon(QIcon(simbolo))
+
         self.et_logo = QLabel("Finance")
         self.et_logo.setObjectName("Logo")
         self.b_menu = QPushButton()
         self.b_menu.setObjectName("BottoneMenu")
         self.b_menu.setFixedSize(32, 32)
         self.b_menu.setIconSize(QSize(19, 19))
-        self.b_menu.setToolTip("Apri o chiudi il menu  (Ctrl+B)")
+        self.b_menu.setToolTip("Chiudi il menu  (Ctrl+B)")
         self.b_menu.clicked.connect(self.commuta_barra)
+
+        self.spazio_testa = QSpacerItem(0, 0, QSizePolicy.Fixed, QSizePolicy.Minimum)
+        testa.addItem(self.spazio_testa)
+        testa.addWidget(self.b_logo)
         testa.addWidget(self.et_logo)
         testa.addStretch(1)
         testa.addWidget(self.b_menu)
+        self.lay_testa = testa
         lay.addWidget(self.testata)
         lay.addSpacing(10)
 
@@ -146,7 +164,13 @@ class FinestraPrincipale(QMainWindow):
         chiusa = self.barra_chiusa
         if applica_larghezza:
             self.barra.setFixedWidth(LARGHEZZA_CHIUSA if chiusa else LARGHEZZA_APERTA)
-        self.b_menu.setIcon(icona_menu(self.c["testo2"], not chiusa))
+        self.b_menu.setVisible(not chiusa)
+        self.b_logo.setVisible(chiusa)
+        # da chiusa lo spazio a sinistra si espande: il simbolo resta al centro
+        self.spazio_testa.changeSize(
+            0, 0, QSizePolicy.Expanding if chiusa else QSizePolicy.Fixed,
+            QSizePolicy.Minimum)
+        self.lay_testa.invalidate()
         self.et_logo.setVisible(not chiusa)
         self.et_saldo_nota.setVisible(not chiusa)
         self.separatore_barra.setVisible(True)
@@ -155,7 +179,7 @@ class FinestraPrincipale(QMainWindow):
         self.lay_barra.setContentsMargins(*((8, 14, 8, 16) if chiusa
                                             else (12, 14, 12, 14)))
         self.lay_barra.setSpacing(5 if chiusa else 6)
-        self.b_menu.setFixedSize(46 if chiusa else 34, 38 if chiusa else 32)
+        self.b_menu.setFixedSize(34, 32)
         for b in self.pulsanti:
             if chiusa:
                 b.setFixedSize(46, 44)
@@ -318,10 +342,10 @@ class FinestraPrincipale(QMainWindow):
     def _aggiorna_icone(self) -> None:
         """Ridisegna le icone con i colori del tema e lo stile scelti."""
         stile = self.db.leggi("stile_icone", STILE_PREDEFINITO)
+        self.b_menu.setIcon(icona_menu(self.c["testo2"], True, stile=stile))
         for (nome_icona, _), b in zip(VISTE, self.pulsanti):
             b.setIcon(icona(nome_icona, self.c["testo2"], "#ffffff", stile=stile))
-        self.b_menu.setIcon(icona_menu(self.c["testo2"], not self.barra_chiusa,
-                                       stile=stile))
+        self.b_menu.setIcon(icona_menu(self.c["testo2"], True, stile=stile))
 
     def applica_tema(self, nome: str) -> None:
         self.c = colori(nome, self.db.leggi("accento", ACCENTO_PREDEFINITO))

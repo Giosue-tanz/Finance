@@ -302,6 +302,10 @@ def foglio_stile(c: dict, scala: float = 1.0,
         font-weight: 600;
     }}
     QWidget#TestataBarra {{ background: transparent; }}
+    QPushButton#LogoApp {{
+        background: transparent; border: none; border-radius: 10px; padding: 0;
+    }}
+    QPushButton#LogoApp:hover {{ background: {c['pannello2']}; }}
     QWidget#PiedeBarra {{ background: transparent; }}
     QLabel#SaldoBarra {{ font-size: {p(20)}; font-weight: 700; }}
 
