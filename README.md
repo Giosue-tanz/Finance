@@ -1,11 +1,16 @@
 # Finance
 
-![licenza](https://img.shields.io/badge/licenza-MIT-green) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![offline](https://img.shields.io/badge/rete-nessuna-success)
+![licenza](https://img.shields.io/badge/licenza-MIT-green) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![offline](https://img.shields.io/badge/rete-nessuna-success) ![piattaforma](https://img.shields.io/badge/piattaforma-Linux-orange)
 
 Applicazione desktop nativa per la gestione delle finanze personali.
 **Funziona interamente offline**: nessuna connessione di rete, nessun account,
 nessun servizio esterno. I dati restano in un unico file SQLite dentro la cartella
 `dati/`.
+
+> **Solo Linux, per ora.** L'installazione, le icone e le scorciatoie sono
+> pensate per il desktop Linux (testata su Arch). Il codice è Python e PySide6,
+> quindi in teoria gira anche su Windows e macOS, ma gli script di installazione
+> e aggiornamento non sono adattati e non c'è alcun pacchetto per quei sistemi.
 
 ## Installazione
 
