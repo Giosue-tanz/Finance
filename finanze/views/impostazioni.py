@@ -208,6 +208,17 @@ class VistaImpostazioni(VistaBase):
         self.barra_esito.setText(f"•  {testo}")
         self._timer_esito.start(5000)
 
+
+    # ----------------------------------------------------------- stato vista
+    def stato_vista(self) -> dict:
+        """Cosa ricordare quando la vista viene ricostruita (cambio lingua)."""
+        return {"scheda": self.schede.currentIndex()}
+
+    def ripristina_vista(self, stato: dict) -> None:
+        indice = stato.get("scheda", 0)
+        if 0 <= indice < self.schede.count():
+            self.schede.setCurrentIndex(indice)
+
     # ----------------------------------------------------------------- conti
     def _tab_conti(self) -> QWidget:
         w = QWidget(); lay = QVBoxLayout(w); lay.setSpacing(12)

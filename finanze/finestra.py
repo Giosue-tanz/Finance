@@ -298,6 +298,8 @@ class FinestraPrincipale(QMainWindow):
         self._disegna_barra()
 
         indice = self.pila.currentIndex()
+        stati = [vista.stato_vista() if hasattr(vista, "stato_vista") else None
+                 for vista in self.viste]
         for vista in self.viste:
             self.pila.removeWidget(vista)
             vista.deleteLater()
@@ -315,6 +317,9 @@ class FinestraPrincipale(QMainWindow):
             self.viste.append(vista)
             self.pila.addWidget(vista)
         self.applica_tema(self.db.leggi("tema", "scuro"))
+        for vista, stato in zip(self.viste, stati):
+            if stato is not None and hasattr(vista, "ripristina_vista"):
+                vista.ripristina_vista(stato)
         self.vai(indice)
 
     def _comandi_vista(self, vista) -> None:
