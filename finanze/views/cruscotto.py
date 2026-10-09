@@ -6,6 +6,8 @@ allo spazio disponibile. La disposizione viene salvata nell'archivio.
 """
 from __future__ import annotations
 
+from datetime import date, timedelta
+
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtWidgets import (QHBoxLayout, QLabel, QMenu, QProgressBar,
@@ -48,7 +50,7 @@ PERIODI_SEZIONE = {
     "ripartizione": (PERIODI, "mese"),
     "ultimi": (PERIODI, "tutto"),
     "budget": ({"mese": "Mese corrente", "mese_scorso": "Mese scorso"}, "mese"),
-    "andamento": (FINESTRE, "12"),
+    "andamento": (PERIODI, "dodici_mesi"),
     "mensili": (FINESTRE, "12"),
 }
 
@@ -84,13 +86,13 @@ class VistaCruscotto(VistaBase):
         self.menu_sezioni = QMenu(self)
         self.azioni: dict[str, QAction] = {}
         for chiave, nome in TITOLI.items():
-            a = QAction(nome.capitalize() if nome.isupper() else nome,
+            a = QAction(t(nome).capitalize() if nome.isupper() else t(nome),
                         self, checkable=True, checked=True)
             a.toggled.connect(lambda visibile, k=chiave: self._mostra(k, visibile))
             self.menu_sezioni.addAction(a)
             self.azioni[chiave] = a
         self.menu_sezioni.addSeparator()
-        self.menu_sezioni.addAction("Ripristina disposizione predefinita",
+        self.menu_sezioni.addAction(t("Ripristina disposizione predefinita"),
                                     self.ripristina_predefinita)
         self.b_sezioni.setMenu(self.menu_sezioni)
         self.azioni_intestazione = [self.b_sezioni]
@@ -143,7 +145,7 @@ class VistaCruscotto(VistaBase):
 
     def _aggiungi(self, chiave: str, contenuto: QWidget,
                   stile: str = "Sezione") -> None:
-        sezione = Sezione(chiave, TITOLI[chiave], contenuto, stile)
+        sezione = Sezione(chiave, t(TITOLI[chiave]), contenuto, stile)
         sezione.chiusura_richiesta.connect(
             lambda k: self.azioni[k].setChecked(False))
         sezione.periodo_richiesto.connect(self._menu_periodo)
@@ -164,7 +166,7 @@ class VistaCruscotto(VistaBase):
         if chiave not in PERIODI_SEZIONE:
             return ""
         voci, _ = PERIODI_SEZIONE[chiave]
-        return voci[self._periodo(chiave)].lower()
+        return t(voci[self._periodo(chiave)]).lower()
 
     def _menu_periodo(self, chiave: str, punto) -> None:
         """Elenco dei periodi, aperto dal testo nell'intestazione."""
@@ -174,7 +176,7 @@ class VistaCruscotto(VistaBase):
         corrente = self._periodo(chiave)
         menu = QMenu(self)
         for valore, testo in voci.items():
-            azione = menu.addAction(testo)
+            azione = menu.addAction(t(testo))
             azione.setCheckable(True)
             azione.setChecked(valore == corrente)
             azione.triggered.connect(
@@ -192,17 +194,17 @@ class VistaCruscotto(VistaBase):
         if chiave in PERIODI_SEZIONE:
             voci, _ = PERIODI_SEZIONE[chiave]
             corrente = self._periodo(chiave)
-            sottomenu = menu.addMenu("Periodo")
+            sottomenu = menu.addMenu(t("Periodo"))
             for valore, testo in voci.items():
-                azione = sottomenu.addAction(testo)
+                azione = sottomenu.addAction(t(testo))
                 azione.setCheckable(True)
                 azione.setChecked(valore == corrente)
                 azione.triggered.connect(
                     lambda _=False, k=chiave, v=valore: self._imposta_periodo(k, v))
             menu.addSeparator()
-        menu.addAction("Nascondi questa sezione",
+        menu.addAction(t("Nascondi questa sezione"),
                        lambda: self.azioni[chiave].setChecked(False))
-        menu.addAction("Ripristina disposizione", self.ripristina_predefinita)
+        menu.addAction(t("Ripristina disposizione"), self.ripristina_predefinita)
         menu.exec(punto)
 
     # ---------------------------------------------------------- disposizione
@@ -270,12 +272,52 @@ class VistaCruscotto(VistaBase):
             return 12
 
     def _serie_saldo(self, mesi: int) -> list[tuple[str, float]]:
+        """Saldo cumulato mese per mese."""
         iniziale = float(self.db.query(
             "SELECT COALESCE(SUM(saldo_iniziale),0) s FROM conti")[0]["s"])
         cumulato, punti = iniziale, []
         for mese, e, u in self.db.serie_mensile(mesi):
             cumulato += e - u
             punti.append((etichetta_mese(mese), cumulato))
+        return punti
+
+    def _serie_saldo_intervallo(self, dal: str, al: str) -> list[tuple[str, float]]:
+        """Saldo cumulato sui mesi compresi nell'intervallo richiesto."""
+        inizio = date.fromisoformat(dal)
+        cumulato = self.db.saldo_alla_data(
+            (inizio - timedelta(days=1)).isoformat())
+        punti = []
+        for mese, e, u in self.db.serie_mensile_intervallo(dal, al):
+            cumulato += e - u
+            punti.append((etichetta_mese(mese), cumulato))
+        return punti
+
+    def _serie_andamento(self) -> list[tuple[str, float]]:
+        """Andamento del saldo nel periodo scelto.
+
+        Sotto i due mesi la curva è giorno per giorno, oltre passa ai mesi:
+        così anche «oggi» o «7 giorni» mostrano qualcosa di leggibile.
+        """
+        periodo = self._periodo("andamento")
+        if periodo == "tutto":
+            return self._serie_saldo(600)
+        dal, al = intervallo(periodo)
+        oggi = date.today().isoformat()
+        al = min(al, oggi)                      # niente curva nel futuro
+        giorni = (date.fromisoformat(al) - date.fromisoformat(dal)).days + 1
+        if giorni > 62:
+            return self._serie_saldo_intervallo(dal, al)
+
+        # granularità giornaliera: si parte dal saldo del giorno prima
+        inizio = date.fromisoformat(dal)
+        saldo = self.db.saldo_alla_data((inizio - timedelta(days=1)).isoformat())
+        movimenti = {d: (e, u) for d, e, u in self.db.serie_giornaliera(dal, al)}
+        punti = []
+        for passo in range(giorni):
+            giorno = inizio + timedelta(days=passo)
+            entrate, uscite = movimenti.get(giorno.isoformat(), (0.0, 0.0))
+            saldo += entrate - uscite
+            punti.append((giorno.strftime("%d/%m"), saldo))
         return punti
 
     def _aggiorna_saldo(self, v: str) -> None:
@@ -311,8 +353,7 @@ class VistaCruscotto(VistaBase):
                     [s[1] - s[2] for s in serie])
 
     def _aggiorna_andamento(self) -> None:
-        self.g_saldo.imposta_dati(self._serie_saldo(self._mesi_finestra("andamento")),
-                                  self.c["accento"])
+        self.g_saldo.imposta_dati(self._serie_andamento(), self.c["accento"])
 
     def _aggiorna_ripartizione(self, v: str, colori: dict, icone: dict) -> None:
         dal, al = intervallo(self._periodo("ripartizione"))

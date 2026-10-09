@@ -13,6 +13,8 @@ from PySide6.QtGui import QDrag, QFont, QPainter, QPixmap
 from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QSizePolicy, QSplitter,
                                QVBoxLayout, QWidget)
 
+from .lingue import t
+
 MIME = "application/x-finance-sezione"
 BORDO_RIGA = 18          # zona in cui il rilascio crea una riga nuova
 LARGHEZZA_MINIMA = 150
@@ -47,7 +49,7 @@ class Intestazione(QWidget):
         self.azioni = QLabel("⋯")
         self.azioni.setObjectName("AzioniSezione")
         self.azioni.setCursor(Qt.PointingHandCursor)
-        self.azioni.setToolTip("Altre azioni")
+        self.azioni.setToolTip(t("Altre azioni"))
         self.azioni.setVisible(False)
 
         lay.addWidget(self.titolo)

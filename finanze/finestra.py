@@ -99,7 +99,7 @@ class FinestraPrincipale(QMainWindow):
         self.b_logo.setFixedSize(46, 44)
         self.b_logo.setIconSize(QSize(44, 44))   # il simbolo riempie il pulsante
         self.b_logo.setCursor(Qt.PointingHandCursor)
-        self.b_logo.setToolTip("Apri il menu  (Ctrl+B)")
+        self.b_logo.setToolTip(t("Apri il menu  (Ctrl+B)"))
         self.b_logo.clicked.connect(self.commuta_barra)
         simbolo = os.path.join(APP_DIR, "risorse", "icona.png")
         if os.path.exists(simbolo):
@@ -111,7 +111,7 @@ class FinestraPrincipale(QMainWindow):
         self.b_menu.setObjectName("BottoneMenu")
         self.b_menu.setFixedSize(32, 32)
         self.b_menu.setIconSize(QSize(19, 19))
-        self.b_menu.setToolTip("Chiudi il menu  (Ctrl+B)")
+        self.b_menu.setToolTip(t("Chiudi il menu  (Ctrl+B)"))
         self.b_menu.clicked.connect(self.commuta_barra)
 
         self.spazio_testa = QSpacerItem(0, 0, QSizePolicy.Fixed, QSizePolicy.Minimum)
@@ -287,12 +287,35 @@ class FinestraPrincipale(QMainWindow):
         vista.aggiorna()
 
     def applica_lingua(self) -> None:
-        """Rilegge la lingua scelta e rinfresca le scritte già a schermo."""
+        """Rilegge la lingua scelta e ricostruisce l'interfaccia.
+
+        Le etichette vengono tradotte quando i widget nascono: per cambiarle
+        tutte la via pulita è rifare le viste, invece di inseguire ogni scritta.
+        """
         imposta_lingua(self.db.leggi("lingua", LINGUA_PREDEFINITA))
         self.et_saldo_nota.setText(t("SALDO TOTALE"))
         self.b_rapido.setText(t("+  Nuovo movimento"))
         self._disegna_barra()
-        self.vai(self.pila.currentIndex())
+
+        indice = self.pila.currentIndex()
+        for vista in self.viste:
+            self.pila.removeWidget(vista)
+            vista.deleteLater()
+        self.viste.clear()
+        for _, classe in VISTE:
+            vista = classe(self.db, self.c)
+            vista.dati_cambiati.connect(self.ricarica)
+            if hasattr(vista, "tema_cambiato"):
+                vista.tema_cambiato.connect(self.applica_tema)
+            if hasattr(vista, "aspetto_cambiato"):
+                vista.aspetto_cambiato.connect(
+                    lambda: self.applica_tema(self.db.leggi("tema", "scuro")))
+            if hasattr(vista, "lingua_cambiata"):
+                vista.lingua_cambiata.connect(self.applica_lingua)
+            self.viste.append(vista)
+            self.pila.addWidget(vista)
+        self.applica_tema(self.db.leggi("tema", "scuro"))
+        self.vai(indice)
 
     def _comandi_vista(self, vista) -> None:
         """Mostra in alto a destra i comandi propri della vista attiva."""

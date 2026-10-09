@@ -39,10 +39,10 @@ class VistaRapporti(VistaBase):
         lay.addWidget(sc_filtri)
 
         fila = riga()
-        self.s_entrate = SchedaStat("Entrate nel periodo", self.c, self.c["entrata"])
-        self.s_uscite = SchedaStat("Uscite nel periodo", self.c, self.c["uscita"])
-        self.s_saldo = SchedaStat("Saldo del periodo", self.c, self.c["accento"])
-        self.s_media = SchedaStat("Spesa media mensile", self.c, self.c["attenzione"])
+        self.s_entrate = SchedaStat(t("Entrate nel periodo"), self.c, self.c["entrata"])
+        self.s_uscite = SchedaStat(t("Uscite nel periodo"), self.c, self.c["uscita"])
+        self.s_saldo = SchedaStat(t("Saldo del periodo"), self.c, self.c["accento"])
+        self.s_media = SchedaStat(t("Spesa media mensile"), self.c, self.c["attenzione"])
         for s in (self.s_entrate, self.s_uscite, self.s_saldo, self.s_media):
             fila.addWidget(s)
         lay.addLayout(fila)

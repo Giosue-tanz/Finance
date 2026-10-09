@@ -127,10 +127,10 @@ class VistaBudget(VistaBase):
 
     # ---------------------------------------------------------- indicatori
     def _indicatori(self):
-        self.s_pianificato = SchedaStat("Budget pianificato", self.c, self.c["accento"])
-        self.s_speso = SchedaStat("Speso questo mese", self.c, self.c["uscita"])
-        self.s_residuo = SchedaStat("Residuo disponibile", self.c, self.c["entrata"])
-        self.s_giorno = SchedaStat("Puoi spendere al giorno", self.c, self.c["attenzione"])
+        self.s_pianificato = SchedaStat(t("Budget pianificato"), self.c, self.c["accento"])
+        self.s_speso = SchedaStat(t("Speso questo mese"), self.c, self.c["uscita"])
+        self.s_residuo = SchedaStat(t("Residuo disponibile"), self.c, self.c["entrata"])
+        self.s_giorno = SchedaStat(t("Puoi spendere al giorno"), self.c, self.c["attenzione"])
         fila = riga()
         for s in (self.s_pianificato, self.s_speso, self.s_residuo, self.s_giorno):
             fila.addWidget(s)
@@ -163,7 +163,7 @@ class VistaBudget(VistaBase):
         self.gruppo_filtri = QButtonGroup(self)
         fila = riga()
         for i, nome in enumerate(FILTRI):
-            b = QPushButton(nome); b.setObjectName("Segmento"); b.setCheckable(True)
+            b = QPushButton(t(nome)); b.setObjectName("Segmento"); b.setCheckable(True)
             b.setChecked(i == 0)
             self.gruppo_filtri.addButton(b, i)
             fila.addWidget(b)
@@ -308,15 +308,15 @@ class VistaBudget(VistaBase):
         if not categoria:
             return
         menu = QMenu(self)
-        menu.addAction("Modifica limite…", self.modifica)
-        menu.addAction("Allinea alla media storica",
+        menu.addAction(t("Modifica limite…"), self.modifica)
+        menu.addAction(t("Allinea alla media storica"),
                        lambda: self._imposta(categoria,
                                              self._arrotonda(self._media_storica(categoria))))
-        menu.addAction("Aumenta del 10%",
+        menu.addAction(t("Aumenta del 10%"),
                        lambda: self._scala(categoria, 1.1))
-        menu.addAction("Riduci del 10%", lambda: self._scala(categoria, 0.9))
+        menu.addAction(t("Riduci del 10%"), lambda: self._scala(categoria, 0.9))
         menu.addSeparator()
-        menu.addAction("Rimuovi budget", self.elimina)
+        menu.addAction(t("Rimuovi budget"), self.elimina)
         menu.exec(self.tab.viewport().mapToGlobal(posizione))
 
     # ------------------------------------------------------------------ dati

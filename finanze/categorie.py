@@ -68,7 +68,7 @@ class SceltaTipo(QWidget):
         self.gruppo = QButtonGroup(self)
         self.bottoni: list[QPushButton] = []
         for i, (chiave, etichetta) in enumerate(self.OPZIONI):
-            b = QPushButton(etichetta)
+            b = QPushButton(t(etichetta))
             b.setObjectName("TastoTipo")
             b.setCheckable(True)
             b.setChecked(chiave == tipo)

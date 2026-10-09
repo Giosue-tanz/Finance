@@ -37,11 +37,11 @@ class DialogoObiettivo(QDialog):
 
         modulo = QFormLayout()
         modulo.setSpacing(10)
-        modulo.addRow("Nome", self.nome)
-        modulo.addRow("Importo obiettivo", self.target)
-        modulo.addRow("Già accantonato", self.accantonato)
-        modulo.addRow("Scadenza", self.scadenza)
-        modulo.addRow("Note", self.note)
+        modulo.addRow(t("Nome"), self.nome)
+        modulo.addRow(t("Importo obiettivo"), self.target)
+        modulo.addRow(t("Già accantonato"), self.accantonato)
+        modulo.addRow(t("Scadenza"), self.scadenza)
+        modulo.addRow(t("Note"), self.note)
 
         bb = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
         bb.button(QDialogButtonBox.Save).setText(t("Salva"))

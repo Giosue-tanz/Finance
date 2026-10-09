@@ -56,9 +56,9 @@ class DialogoConto(QDialog):
         self.saldo.setSuffix(f" {valuta}")
 
         modulo = QFormLayout(); modulo.setSpacing(10)
-        modulo.addRow("Nome", self.nome)
-        modulo.addRow("Tipo", self.tipo)
-        modulo.addRow("Saldo iniziale", self.saldo)
+        modulo.addRow(t("Nome"), self.nome)
+        modulo.addRow(t("Tipo"), self.tipo)
+        modulo.addRow(t("Saldo iniziale"), self.saldo)
 
         bb = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
         bb.button(QDialogButtonBox.Save).setText(t("Salva"))
@@ -100,10 +100,10 @@ class DialogoCategoria(QDialog):
         self.b_icona.clicked.connect(self._scegli_icona)
 
         modulo = QFormLayout(); modulo.setSpacing(10)
-        modulo.addRow("Nome", self.nome)
-        modulo.addRow("Tipo", self.tipo)
-        modulo.addRow("Icona", self.b_icona)
-        modulo.addRow("Colore", self.b_colore)
+        modulo.addRow(t("Nome"), self.nome)
+        modulo.addRow(t("Tipo"), self.tipo)
+        modulo.addRow(t("Icona"), self.b_icona)
+        modulo.addRow(t("Colore"), self.b_colore)
 
         bb = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
         bb.button(QDialogButtonBox.Save).setText(t("Salva"))
@@ -268,7 +268,7 @@ class VistaImpostazioni(VistaBase):
         self.filtro_cat = QButtonGroup(self)
         barra_filtri = riga()
         for i, testo in enumerate(("Tutte", "Uscite", "Entrate")):
-            b = QPushButton(testo); b.setObjectName("Segmento"); b.setCheckable(True)
+            b = QPushButton(t(testo)); b.setObjectName("Segmento"); b.setCheckable(True)
             b.setChecked(i == 0)
             self.filtro_cat.addButton(b, i)
             barra_filtri.addWidget(b)
@@ -316,7 +316,7 @@ class VistaImpostazioni(VistaBase):
         self.gruppo_tema = QButtonGroup(self)
         fila = riga()
         for i, nome in enumerate(("scuro", "chiaro")):
-            b = QPushButton(nome.capitalize()); b.setObjectName("Segmento")
+            b = QPushButton(t(nome).capitalize()); b.setObjectName("Segmento")
             b.setCheckable(True)
             self.gruppo_tema.addButton(b, i)
             fila.addWidget(b)
@@ -351,7 +351,7 @@ class VistaImpostazioni(VistaBase):
             b.setObjectName("CampioneIcone")
             b.setCheckable(True)
             b.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-            b.setText(nome.capitalize())
+            b.setText(t(nome).capitalize())
             # dimensioni fissate subito: il riquadro deve nascere già alto
             # abbastanza, altrimenti la nota sotto finisce sopra le icone
             anteprima = anteprima_stile(nome, self.c["testo2"])
@@ -394,7 +394,7 @@ class VistaImpostazioni(VistaBase):
         self.gruppo_scala = QButtonGroup(self)
         fila2 = riga()
         for i, nome in enumerate(SCALE):
-            b = QPushButton(nome.capitalize()); b.setObjectName("Segmento")
+            b = QPushButton(t(nome).capitalize()); b.setObjectName("Segmento")
             b.setCheckable(True)
             self.gruppo_scala.addButton(b, i)
             fila2.addWidget(b)

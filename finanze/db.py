@@ -282,6 +282,35 @@ class Database:
             "FROM movimenti GROUP BY m ORDER BY m DESC LIMIT ?", (mesi,))
         return [(r["m"], float(r["e"]), float(r["u"])) for r in reversed(rows)]
 
+    def serie_giornaliera(self, dal: str, al: str) -> list[tuple[str, float, float]]:
+        """Entrate e uscite giorno per giorno: serve ai periodi brevi."""
+        rows = self.query(
+            "SELECT data d, "
+            "SUM(CASE WHEN tipo='entrata' THEN importo ELSE 0 END) e, "
+            "SUM(CASE WHEN tipo='uscita'  THEN importo ELSE 0 END) u "
+            "FROM movimenti WHERE data BETWEEN ? AND ? GROUP BY d ORDER BY d",
+            (dal, al))
+        return [(r["d"], float(r["e"]), float(r["u"])) for r in rows]
+
+    def serie_mensile_intervallo(self, dal: str, al: str) -> list[tuple[str, float, float]]:
+        """Entrate e uscite per mese, limitate all'intervallo indicato."""
+        rows = self.query(
+            "SELECT substr(data,1,7) m, "
+            "SUM(CASE WHEN tipo='entrata' THEN importo ELSE 0 END) e, "
+            "SUM(CASE WHEN tipo='uscita'  THEN importo ELSE 0 END) u "
+            "FROM movimenti WHERE data BETWEEN ? AND ? GROUP BY m ORDER BY m",
+            (dal, al))
+        return [(r["m"], float(r["e"]), float(r["u"])) for r in rows]
+
+    def saldo_alla_data(self, data: str) -> float:
+        """Saldo complessivo com'era alla fine del giorno indicato."""
+        iniziale = float(self.query(
+            "SELECT COALESCE(SUM(saldo_iniziale),0) s FROM conti")[0]["s"])
+        r = self.query(
+            "SELECT COALESCE(SUM(CASE WHEN tipo='entrata' THEN importo "
+            "ELSE -importo END),0) m FROM movimenti WHERE data <= ?", (data,))[0]
+        return iniziale + float(r["m"])
+
     def colori_categorie(self) -> dict[str, str]:
         return {r["nome"]: r["colore"] for r in self.query("SELECT nome, colore FROM categorie")}
 

@@ -109,7 +109,7 @@ class VistaMovimenti(VistaBase):
         self.b_nuova_cat = QPushButton("+")
         self.b_nuova_cat.setObjectName("AggiungiAccanto")
         self.b_nuova_cat.setFixedWidth(34)
-        self.b_nuova_cat.setToolTip("Crea una nuova categoria")
+        self.b_nuova_cat.setToolTip(t("Crea una nuova categoria"))
         self.b_nuova_cat.clicked.connect(self.nuova_categoria)
         self.q_conto = QComboBox(); self.q_conto.setMinimumWidth(140)
         self.q_data = QDateEdit(QDate.currentDate())
@@ -127,7 +127,7 @@ class VistaMovimenti(VistaBase):
                                 self.q_categoria, self.b_nuova_cat, self.q_conto,
                                 self.q_data, b_salva, b_dettagli))
         for campo in (self.q_descrizione, self.q_importo):
-            campo.setToolTip("Invio salva il movimento")
+            campo.setToolTip(t("Invio salva il movimento"))
         self.q_descrizione.returnPressed.connect(self.inserimento_rapido)
         self._tipo_rapido = "uscita"
         self.q_tipo.setStyleSheet(
@@ -162,7 +162,7 @@ class VistaMovimenti(VistaBase):
         self.g_periodo = QButtonGroup(self)
         fila = riga()
         for i, nome in enumerate(PERIODI):
-            b = QPushButton(nome); b.setObjectName("Segmento"); b.setCheckable(True)
+            b = QPushButton(t(nome)); b.setObjectName("Segmento"); b.setCheckable(True)
             b.setChecked(nome == "Mese")
             self.g_periodo.addButton(b, i)
             fila.addWidget(b)
@@ -185,7 +185,7 @@ class VistaMovimenti(VistaBase):
         self.g_tipo = QButtonGroup(self)
         fila2 = riga()
         for i, nome in enumerate(("Tutti", "Entrate", "Uscite")):
-            b = QPushButton(nome); b.setObjectName("Segmento"); b.setCheckable(True)
+            b = QPushButton(t(nome)); b.setObjectName("Segmento"); b.setCheckable(True)
             b.setChecked(i == 0)
             self.g_tipo.addButton(b, i)
             fila2.addWidget(b)
@@ -366,8 +366,8 @@ class VistaMovimenti(VistaBase):
         if not self.tab.selectionModel().selectedRows():
             return
         menu = QMenu(self)
-        menu.addAction("Modifica…", self.modifica)
-        menu.addAction("Duplica a oggi", self.duplica)
+        menu.addAction(t("Modifica…"), self.modifica)
+        menu.addAction(t("Duplica a oggi"), self.duplica)
         menu.addSeparator()
         riga_sel = self.tab.currentRow()
         if riga_sel >= 0:
@@ -378,7 +378,7 @@ class VistaMovimenti(VistaBase):
             menu.addAction(f"Filtra per conto «{conto}»",
                            lambda: self._filtra_per(self.f_conto, conto))
         menu.addSeparator()
-        menu.addAction("Elimina", self.elimina)
+        menu.addAction(t("Elimina"), self.elimina)
         menu.exec(self.tab.viewport().mapToGlobal(posizione))
 
     def _filtra_per(self, combo: QComboBox, valore: str) -> None:
