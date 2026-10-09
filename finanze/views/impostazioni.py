@@ -255,7 +255,7 @@ class VistaImpostazioni(VistaBase):
 
         # ---------------------------------------------------- nuova categoria
         sc = Scheda("Nuova categoria")
-        self.barra_nuova = BarraNuovaCategoria(self.db)
+        self.barra_nuova = BarraNuovaCategoria(self.db, colori=self.c)
         self.barra_nuova.creata.connect(self._categoria_creata)
         self.barra_nuova.rifiutata.connect(lambda m: self._avviso(m))
         sc.aggiungi(self.barra_nuova)
@@ -699,6 +699,10 @@ class VistaImpostazioni(VistaBase):
 
     # ------------------------------------------------------------- categorie
     # ------------------------------------------------- creazione categoria
+    def aggiorna_tema(self, colori: dict) -> None:
+        super().aggiorna_tema(colori)
+        self.barra_nuova.aggiorna_tema(colori)
+
     def _categoria_creata(self, nome: str, tipo: str) -> None:
         icona = self.db.query("SELECT icona FROM categorie WHERE nome=? AND tipo=?",
                               (nome, tipo))[0]["icona"]

@@ -491,7 +491,7 @@ class VistaMovimenti(VistaBase):
     def nuova_categoria(self) -> None:
         """Crea una categoria senza lasciare la pagina e la seleziona subito."""
         dlg = DialogoNuovaCategoria(self.db, self._tipo_rapido,
-                                    parent=self)
+                                    colori=self.c, parent=self)
         if not dlg.exec() or not dlg.nome_creato:
             return
         self._firma_elenchi = ""            # forza il ricarico delle tendine

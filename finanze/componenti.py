@@ -263,7 +263,7 @@ class DialogoMovimento(QDialog):
         gia_presente = any(scritto == self.categoria.itemData(i)
                            for i in range(self.categoria.count()))
         dlg = DialogoNuovaCategoria(self.db, tipo,
-                                    "" if gia_presente else scritto, self)
+                                    "" if gia_presente else scritto, parent=self)
         if not dlg.exec() or not dlg.nome_creato:
             return
         elenco = self.cat_entrata if tipo == "entrata" else self.cat_uscita

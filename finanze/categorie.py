@@ -6,14 +6,14 @@ creare ovunque serva senza cambiare pagina.
 """
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QEasingCurve, Qt, QVariantAnimation, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (QButtonGroup, QColorDialog, QDialog, QFrame,
                                QHBoxLayout, QLabel, QLineEdit, QPushButton,
                                QVBoxLayout, QWidget)
 
 from .icone import ICONA_PREDEFINITA, SelettoreIcona, icona_suggerita
-from .tema import PALETTE_GRAFICI
+from .tema import PALETTE_GRAFICI, colori as colori_tema
 
 ALTEZZA = 38
 
@@ -44,36 +44,100 @@ def crea(db, nome: str, tipo: str, icona: str = "", colore: str = "") -> str:
     return icona
 
 
-class PistaTipo(QWidget):
-    """Selettore Uscita/Entrata: una pista unica con la pillola che scorre."""
+class SceltaTipo(QWidget):
+    """Scelta fra uscita ed entrata: due tasti distinti, ognuno col suo colore.
+
+    Nessun contenitore comune e nessun cursore che scorre: ogni opzione ha la
+    propria freccia e la propria tinta, e quando viene scelta si riempie del
+    suo colore mentre l'altra si svuota.
+    """
 
     cambiato = Signal(str)
+    DURATA = 200
+    OPZIONI = (("uscita", "Uscita", "↓"), ("entrata", "Entrata", "↑"))
 
-    def __init__(self, tipo: str = "uscita", parent=None):
+    def __init__(self, tipo: str = "uscita", colori: dict | None = None, parent=None):
         super().__init__(parent)
-        self.setObjectName("PistaSegmenti")
-        self.setAttribute(Qt.WA_StyledBackground, True)
+        self.c = colori or colori_tema()
         self.setFixedHeight(ALTEZZA)
+
         lay = QHBoxLayout(self)
-        lay.setContentsMargins(3, 3, 3, 3)
-        lay.setSpacing(2)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(7)
         self.gruppo = QButtonGroup(self)
-        for i, nome in enumerate(("Uscita", "Entrata")):
-            b = QPushButton(nome)
-            b.setObjectName("SegmentoPista")
+        self.bottoni: list[QPushButton] = []
+        for i, (chiave, etichetta, freccia) in enumerate(self.OPZIONI):
+            b = QPushButton(f"{freccia}  {etichetta}")
+            b.setObjectName("TastoTipo")
             b.setCheckable(True)
-            b.setChecked(nome.lower().startswith(tipo[:6]))
-            b.setMinimumWidth(78)
+            b.setChecked(chiave == tipo)
+            b.setMinimumWidth(96)
+            b.setFixedHeight(ALTEZZA)
             b.setCursor(Qt.PointingHandCursor)
             self.gruppo.addButton(b, i)
+            self.bottoni.append(b)
             lay.addWidget(b, 1)
-        self.gruppo.idClicked.connect(lambda _: self.cambiato.emit(self.tipo()))
+
+        self._avanzamento = 0.0 if tipo == "uscita" else 1.0
+        self._animazione = QVariantAnimation(self)
+        self._animazione.setDuration(self.DURATA)
+        self._animazione.setEasingCurve(QEasingCurve.OutCubic)
+        self._animazione.valueChanged.connect(self._fotogramma)
+        self.gruppo.idClicked.connect(self._scelto)
+        self._ridisegna()
+
+    # ------------------------------------------------------------- aspetto
+    @staticmethod
+    def _velata(colore: str, opacita: float) -> str:
+        c = QColor(colore)
+        return f"rgba({c.red()}, {c.green()}, {c.blue()}, {opacita:.3f})"
+
+    def _ridisegna(self) -> None:
+        """Ogni tasto si riempie del proprio colore quanto è selezionato."""
+        for i, (chiave, _etichetta, _freccia) in enumerate(self.OPZIONI):
+            peso = self._avanzamento if i else 1.0 - self._avanzamento
+            tinta = self.c[chiave]
+            spento = QColor(self.c["testo2"])
+            acceso = QColor("#ffffff")
+            misto = lambda a, b: int(round(a + (b - a) * peso))
+            testo = QColor(misto(spento.red(), acceso.red()),
+                           misto(spento.green(), acceso.green()),
+                           misto(spento.blue(), acceso.blue()))
+            self.bottoni[i].setStyleSheet(
+                f"background: {self._velata(tinta, peso)};"
+                f"border: 1px solid {self._velata(tinta, 0.30 + 0.70 * peso)};"
+                f"border-radius: 9px; padding: 0 10px;"
+                f"color: {testo.name()};"
+                f"font-weight: {700 if peso > 0.5 else 500};")
+
+    def _fotogramma(self, avanzamento: float) -> None:
+        self._avanzamento = float(avanzamento)
+        self._ridisegna()
+
+    def aggiorna_tema(self, colori: dict) -> None:
+        self.c = colori
+        self._ridisegna()
+
+    # --------------------------------------------------------------- stato
+    def _scelto(self, indice: int) -> None:
+        self._anima_verso(float(indice))
+        self.cambiato.emit(self.tipo())
+
+    def _anima_verso(self, destinazione: float) -> None:
+        if abs(destinazione - self._avanzamento) < 0.001:
+            return
+        self._animazione.stop()
+        self._animazione.setStartValue(self._avanzamento)
+        self._animazione.setEndValue(destinazione)
+        self._animazione.start()
 
     def tipo(self) -> str:
         return "uscita" if self.gruppo.checkedId() == 0 else "entrata"
 
     def imposta_tipo(self, tipo: str) -> None:
-        self.gruppo.button(0 if tipo == "uscita" else 1).setChecked(True)
+        indice = 0 if tipo == "uscita" else 1
+        self.gruppo.button(indice).setChecked(True)
+        self._anima_verso(float(indice))
 
 
 class BarraNuovaCategoria(QFrame):
@@ -83,9 +147,10 @@ class BarraNuovaCategoria(QFrame):
     rifiutata = Signal(str)            # motivo da mostrare all'utente
 
     def __init__(self, db, tipo: str = "uscita", testo_conferma: str = "Aggiungi",
-                 parent=None):
+                 colori: dict | None = None, parent=None):
         super().__init__(parent)
         self.db = db
+        self.c = colori or colori_tema()
         self.setObjectName("Compositore")
         self._icona = ICONA_PREDEFINITA
         self._icona_scelta = False
@@ -114,8 +179,8 @@ class BarraNuovaCategoria(QFrame):
         separatore.setFixedWidth(1)
         separatore.setFixedHeight(ALTEZZA - 8)
 
-        self.pista = PistaTipo(tipo)
-        self.pista.cambiato.connect(lambda _: self._aggiorna())
+        self.scelta = SceltaTipo(tipo, self.c)
+        self.scelta.cambiato.connect(lambda _: self._aggiorna())
 
         self.b_colore = QPushButton()
         self.b_colore.setObjectName("ColoreCompositore")
@@ -134,17 +199,17 @@ class BarraNuovaCategoria(QFrame):
         lay.addWidget(self.b_icona)
         lay.addWidget(self.nome, 1)
         lay.addWidget(separatore)
-        lay.addWidget(self.pista)
+        lay.addWidget(self.scelta)
         lay.addWidget(self.b_colore)
         lay.addWidget(self.b_conferma)
         self._aggiorna()
 
     # ------------------------------------------------------------- contenuto
     def tipo(self) -> str:
-        return self.pista.tipo()
+        return self.scelta.tipo()
 
     def imposta_tipo(self, tipo: str) -> None:
-        self.pista.imposta_tipo(tipo)
+        self.scelta.imposta_tipo(tipo)
         self._aggiorna()
 
     def _nome_cambiato(self, testo: str) -> None:
@@ -188,6 +253,11 @@ class BarraNuovaCategoria(QFrame):
         self.creata.emit(nome, tipo)
         self.azzera()
 
+    def aggiorna_tema(self, colori: dict) -> None:
+        """Il selettore usa colori inline: vanno rinfrescati col tema."""
+        self.c = colori
+        self.scelta.aggiorna_tema(colori)
+
     def azzera(self) -> None:
         """Pronta per la categoria successiva."""
         self.nome.clear()
@@ -200,7 +270,8 @@ class BarraNuovaCategoria(QFrame):
 class DialogoNuovaCategoria(QDialog):
     """Creazione al volo mentre si registra un movimento."""
 
-    def __init__(self, db, tipo: str = "uscita", nome_iniziale: str = "", parent=None):
+    def __init__(self, db, tipo: str = "uscita", nome_iniziale: str = "",
+                 colori: dict | None = None, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Nuova categoria")
         self.setMinimumWidth(560)
@@ -210,7 +281,7 @@ class DialogoNuovaCategoria(QDialog):
         lay.setContentsMargins(18, 16, 18, 16)
         lay.setSpacing(10)
 
-        self.barra = BarraNuovaCategoria(db, tipo, "Crea", self)
+        self.barra = BarraNuovaCategoria(db, tipo, "Crea", colori, self)
         self.barra.nome.setText(nome_iniziale)
         self.barra._nome_cambiato(nome_iniziale)
         self.barra.creata.connect(self._creata)
