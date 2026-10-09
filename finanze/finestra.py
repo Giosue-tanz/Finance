@@ -91,8 +91,8 @@ class FinestraPrincipale(QMainWindow):
         # a barra chiusa resta solo il simbolo dell'app, centrato e cliccabile
         self.b_logo = QPushButton()
         self.b_logo.setObjectName("LogoApp")
-        self.b_logo.setFixedSize(46, 42)
-        self.b_logo.setIconSize(QSize(32, 32))
+        self.b_logo.setFixedSize(46, 44)
+        self.b_logo.setIconSize(QSize(44, 44))   # il simbolo riempie il pulsante
         self.b_logo.setCursor(Qt.PointingHandCursor)
         self.b_logo.setToolTip("Apri il menu  (Ctrl+B)")
         self.b_logo.clicked.connect(self.commuta_barra)

@@ -93,22 +93,21 @@ class SceltaTipo(QWidget):
         return f"rgba({c.red()}, {c.green()}, {c.blue()}, {opacita:.3f})"
 
     def _ridisegna(self) -> None:
-        """Ogni tasto si riempie del proprio colore quanto è selezionato."""
+        """Ogni tasto si riempie del proprio colore quanto è selezionato.
+
+        Solo riempimento e bordo sfumano: scritta e freccia passano subito al
+        loro stato, senza transizioni di colore sul testo.
+        """
         for i, (chiave, _etichetta, _freccia) in enumerate(self.OPZIONI):
             peso = self._avanzamento if i else 1.0 - self._avanzamento
             tinta = self.c[chiave]
-            spento = QColor(self.c["testo2"])
-            acceso = QColor("#ffffff")
-            misto = lambda a, b: int(round(a + (b - a) * peso))
-            testo = QColor(misto(spento.red(), acceso.red()),
-                           misto(spento.green(), acceso.green()),
-                           misto(spento.blue(), acceso.blue()))
+            attivo = self.gruppo.checkedId() == i
             self.bottoni[i].setStyleSheet(
                 f"background: {self._velata(tinta, peso)};"
                 f"border: 1px solid {self._velata(tinta, 0.30 + 0.70 * peso)};"
                 f"border-radius: 9px; padding: 0 10px;"
-                f"color: {testo.name()};"
-                f"font-weight: {700 if peso > 0.5 else 500};")
+                f"color: {'#ffffff' if attivo else self.c['testo2']};"
+                f"font-weight: {700 if attivo else 500};")
 
     def _fotogramma(self, avanzamento: float) -> None:
         self._avanzamento = float(avanzamento)
