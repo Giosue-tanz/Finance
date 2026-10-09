@@ -125,7 +125,11 @@ def foglio_stile(c: dict, scala: float = 1.0,
     """ if frecce else ""
 
     return f"""
-    * {{ font-family: "Inter", "Noto Sans", "Segoe UI", sans-serif; font-size: {p(13)}; }}
+    * {{
+        font-family: "Inter", "Noto Sans", "Segoe UI", "Noto Sans CJK SC",
+                     "Source Han Sans SC", "WenQuanYi Micro Hei", sans-serif;
+        font-size: {p(13)};
+    }}
     QWidget {{ background: {c['fondo']}; color: {c['testo']}; }}
     QLabel, QCheckBox, QRadioButton {{ background: transparent; }}
 
@@ -303,8 +307,9 @@ def foglio_stile(c: dict, scala: float = 1.0,
     }}
     QWidget#TestataBarra {{ background: transparent; }}
     QPushButton#LogoApp {{
-        background: transparent; border: none; padding: 0;
+        background: transparent; border: none; border-radius: 10px; padding: 0;
     }}
+    QPushButton#LogoApp:hover {{ background: {c['pannello2']}; }}
     QWidget#PiedeBarra {{ background: transparent; }}
     QLabel#SaldoBarra {{ font-size: {p(20)}; font-weight: 700; }}
 

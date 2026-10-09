@@ -22,6 +22,7 @@ from ..icone import etichetta_categoria, solo_nome
 from ..utils import (anno_corrente, data_it, esporta_csv, euro, importa_csv,
                      mese_corrente)
 from . import VistaBase
+from ..lingue import t
 
 COLONNE = ["Data", "Tipo", "Descrizione", "Categoria", "Conto", "Etichette", "Importo"]
 PERIODI = ["Oggi", "7 giorni", "Mese", "Anno", "Tutto", "Date…"]
@@ -88,7 +89,7 @@ class VistaMovimenti(VistaBase):
     # ------------------------------------------------------ inserimento veloce
     def _barra_inserimento(self) -> QWidget:
         sc = Scheda()
-        self.q_tipo = QPushButton("Uscita")
+        self.q_tipo = QPushButton(t("Uscita"))
         self.q_tipo.setCheckable(True)
         self.q_tipo.setObjectName("Segmento")
         self.q_tipo.setFixedWidth(96)
@@ -103,7 +104,7 @@ class VistaMovimenti(VistaBase):
         self.q_importo.setSuffix(f" {self.valuta}")
 
         self.q_descrizione = QLineEdit()
-        self.q_descrizione.setPlaceholderText("Descrizione")
+        self.q_descrizione.setPlaceholderText(t("Descrizione"))
         self.q_categoria = QComboBox(); self.q_categoria.setMinimumWidth(170)
         self.b_nuova_cat = QPushButton("+")
         self.b_nuova_cat.setObjectName("AggiungiAccanto")
@@ -116,9 +117,9 @@ class VistaMovimenti(VistaBase):
         self.q_data.setDisplayFormat("dd/MM/yyyy")
         self.q_data.setMaximumWidth(130)
 
-        b_salva = QPushButton("Aggiungi"); b_salva.setObjectName("Primario")
+        b_salva = QPushButton(t("Aggiungi")); b_salva.setObjectName("Primario")
         b_salva.clicked.connect(self.inserimento_rapido)
-        b_dettagli = QPushButton("Altri campi…")
+        b_dettagli = QPushButton(t("Altri campi…"))
         b_dettagli.setToolTip("Apre la finestra completa con etichette e note (Ctrl+N)")
         b_dettagli.clicked.connect(self.nuovo)
 
@@ -174,7 +175,7 @@ class VistaMovimenti(VistaBase):
         fila.addStretch(1)
 
         self.f_testo = QLineEdit()
-        self.f_testo.setPlaceholderText("Cerca…")
+        self.f_testo.setPlaceholderText(t("Cerca…"))
         self.f_testo.setToolTip("Cerca nelle descrizioni e nelle etichette  ·  Ctrl+F")
         self.f_testo.setClearButtonEnabled(True)
         self.f_testo.setMinimumWidth(240)
@@ -190,10 +191,10 @@ class VistaMovimenti(VistaBase):
             fila2.addWidget(b)
         self.f_categoria = QComboBox(); self.f_categoria.setMinimumWidth(170)
         self.f_conto = QComboBox(); self.f_conto.setMinimumWidth(150)
-        self.b_azzera = QPushButton("Azzera filtri")
+        self.b_azzera = QPushButton(t("Azzera filtri"))
         self.b_azzera.setVisible(False)
-        fila2.addWidget(etichetta("Categoria")); fila2.addWidget(self.f_categoria)
-        fila2.addWidget(etichetta("Conto")); fila2.addWidget(self.f_conto)
+        fila2.addWidget(etichetta(t("Categoria"))); fila2.addWidget(self.f_categoria)
+        fila2.addWidget(etichetta(t("Conto"))); fila2.addWidget(self.f_conto)
         fila2.addWidget(self.b_azzera)
         fila2.addStretch(1)
         sc.aggiungi_layout(fila2)
@@ -215,11 +216,11 @@ class VistaMovimenti(VistaBase):
         self.p_saldo = QLabel(""); self.p_saldo.setObjectName("Pillola")
         self.p_conteggio = QLabel(""); self.p_conteggio.setObjectName("NotaScheda")
 
-        self.b_modifica = QPushButton("Modifica")
-        self.b_duplica = QPushButton("Duplica")
-        self.b_elimina = QPushButton("Elimina"); self.b_elimina.setObjectName("Pericolo")
-        self.b_esporta = QPushButton("Esporta CSV")
-        self.b_importa = QPushButton("Importa CSV")
+        self.b_modifica = QPushButton(t("Modifica"))
+        self.b_duplica = QPushButton(t("Duplica"))
+        self.b_elimina = QPushButton(t("Elimina")); self.b_elimina.setObjectName("Pericolo")
+        self.b_esporta = QPushButton(t("Esporta CSV"))
+        self.b_importa = QPushButton(t("Importa CSV"))
         for b in (self.b_modifica, self.b_duplica, self.b_elimina):
             b.setEnabled(False)
 

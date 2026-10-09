@@ -21,6 +21,7 @@ from ..grafici import GraficoBarre
 from ..icone import etichetta_categoria
 from ..utils import euro, giorni_mese, mese_corrente
 from . import VistaBase
+from ..lingue import t
 
 FILTRI = ["Tutti", "Sotto controllo", "Vicino al limite", "Oltre il limite"]
 MESI_STORICO = 3
@@ -148,15 +149,15 @@ class VistaBudget(VistaBase):
         self.sp_importo.setMaximumWidth(190)
         self.sp_importo.setSuffix(f" {self.valuta}")
 
-        b_salva = QPushButton("Imposta budget"); b_salva.setObjectName("Primario")
-        b_media = QPushButton("Proponi dalla media")
+        b_salva = QPushButton(t("Imposta budget")); b_salva.setObjectName("Primario")
+        b_media = QPushButton(t("Proponi dalla media"))
         b_media.setToolTip(
             f"Calcola il limite dalla spesa media degli ultimi {MESI_STORICO} mesi")
-        b_modifica = QPushButton("Modifica")
-        b_elimina = QPushButton("Rimuovi"); b_elimina.setObjectName("Pericolo")
+        b_modifica = QPushButton(t("Modifica"))
+        b_elimina = QPushButton(t("Rimuovi")); b_elimina.setObjectName("Pericolo")
 
-        sc.aggiungi_layout(riga(etichetta("Categoria"), self.cmb_categoria,
-                                etichetta("Limite mensile"), self.sp_importo,
+        sc.aggiungi_layout(riga(etichetta(t("Categoria")), self.cmb_categoria,
+                                etichetta(t("Limite mensile")), self.sp_importo,
                                 b_salva, b_media, None, b_modifica, b_elimina))
 
         self.gruppo_filtri = QButtonGroup(self)
@@ -181,11 +182,11 @@ class VistaBudget(VistaBase):
 
     # ---------------------------------------------------------- tabella
     def _tabella_budget(self) -> QWidget:
-        sc = Scheda("Stato dei budget")
+        sc = Scheda(t("Stato dei budget"))
         self.tab = QTableWidget(0, 7)
         self.tab.setHorizontalHeaderLabels(
-            ["Categoria", "Limite", "Speso", "Residuo", "Utilizzo",
-             "Fine mese (stima)", "Stato"])
+            [t("Categoria"), t("Limite"), t("Speso"), t("Residuo"), t("Utilizzo"),
+             t("Fine mese (stima)"), t("Stato")])
         self.tab.verticalHeader().setVisible(False)
         self.tab.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tab.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -209,10 +210,10 @@ class VistaBudget(VistaBase):
         return sc
 
     def _senza_budget(self) -> QWidget:
-        self.sc_senza = Scheda("Categorie senza budget")
+        self.sc_senza = Scheda(t("Categorie senza budget"))
         self.tab_senza = QTableWidget(0, 4)
         self.tab_senza.setHorizontalHeaderLabels(
-            ["Categoria", "Speso questo mese", f"Media {MESI_STORICO} mesi", "Budget proposto"])
+            [t("Categoria"), t("Speso questo mese"), f"Media {MESI_STORICO} mesi", t("Budget proposto")])
         self.tab_senza.verticalHeader().setVisible(False)
         self.tab_senza.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tab_senza.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -223,16 +224,16 @@ class VistaBudget(VistaBase):
         hs = self.tab_senza.horizontalHeader()
         hs.setSectionResizeMode(QHeaderView.ResizeToContents)
         hs.setSectionResizeMode(0, QHeaderView.Stretch)
-        b_adotta = QPushButton("Imposta il budget proposto")
+        b_adotta = QPushButton(t("Imposta il budget proposto"))
         b_adotta.clicked.connect(self.adotta_proposta)
-        b_tutti = QPushButton("Imposta tutti i proposti")
+        b_tutti = QPushButton(t("Imposta tutti i proposti"))
         b_tutti.clicked.connect(self.adotta_tutte)
         self.sc_senza.aggiungi(self.tab_senza, 1)
         self.sc_senza.aggiungi_layout(riga(b_adotta, b_tutti, None))
         return self.sc_senza
 
     def _grafico(self) -> QWidget:
-        sc = Scheda("Utilizzo dei budget")
+        sc = Scheda(t("Utilizzo dei budget"))
         self.g_barre = GraficoBarre(self.c)
         self.g_barre.orizzontale = True
         self.g_barre.setMinimumHeight(110)

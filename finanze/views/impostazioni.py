@@ -25,7 +25,8 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QColorDialog,
 
 from ..componenti import Scheda, abilita_deselezione, etichetta, riga
 from ..categorie import BarraNuovaCategoria
-from ..lingue import LINGUA_PREDEFINITA, LINGUE, imposta_lingua
+from ..lingue import (LINGUA_PREDEFINITA, LINGUE, alfabeto_disponibile,
+                      imposta_lingua, t)
 from ..icone import ICONA_PREDEFINITA, SelettoreIcona, icona_suggerita
 from ..icone_nav import STILE_PREDEFINITO, STILI, anteprima_stile
 from ..tema import ACCENTI, ACCENTO_PREDEFINITO, PALETTE_GRAFICI, SCALE
@@ -46,7 +47,7 @@ class DialogoConto(QDialog):
         self.setMinimumWidth(380)
 
         self.nome = QLineEdit()
-        self.nome.setPlaceholderText("es. Conto principale")
+        self.nome.setPlaceholderText(t("es. Conto principale"))
         self.tipo = QComboBox(); self.tipo.addItems(TIPI_CONTO)
         self.saldo = QDoubleSpinBox()
         self.saldo.setRange(-99_999_999, 99_999_999)
@@ -60,9 +61,9 @@ class DialogoConto(QDialog):
         modulo.addRow("Saldo iniziale", self.saldo)
 
         bb = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-        bb.button(QDialogButtonBox.Save).setText("Salva")
+        bb.button(QDialogButtonBox.Save).setText(t("Salva"))
         bb.button(QDialogButtonBox.Save).setObjectName("Primario")
-        bb.button(QDialogButtonBox.Cancel).setText("Annulla")
+        bb.button(QDialogButtonBox.Cancel).setText(t("Annulla"))
         bb.accepted.connect(self.accept); bb.rejected.connect(self.reject)
 
         lay = QVBoxLayout(self); lay.setContentsMargins(18, 18, 18, 14)
@@ -90,9 +91,9 @@ class DialogoCategoria(QDialog):
         self.setMinimumWidth(380)
 
         self.nome = QLineEdit()
-        self.nome.setPlaceholderText("es. Abbonamenti")
+        self.nome.setPlaceholderText(t("es. Abbonamenti"))
         self.tipo = QComboBox(); self.tipo.addItems(["uscita", "entrata"])
-        self.b_colore = QPushButton("Scegli colore")
+        self.b_colore = QPushButton(t("Scegli colore"))
         self.b_colore.clicked.connect(self._scegli_colore)
         self.b_icona = QPushButton()
         self.b_icona.setStyleSheet("font-size: 20px;")
@@ -105,9 +106,9 @@ class DialogoCategoria(QDialog):
         modulo.addRow("Colore", self.b_colore)
 
         bb = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-        bb.button(QDialogButtonBox.Save).setText("Salva")
+        bb.button(QDialogButtonBox.Save).setText(t("Salva"))
         bb.button(QDialogButtonBox.Save).setObjectName("Primario")
-        bb.button(QDialogButtonBox.Cancel).setText("Annulla")
+        bb.button(QDialogButtonBox.Cancel).setText(t("Annulla"))
         bb.accepted.connect(self.accept); bb.rejected.connect(self.reject)
 
         lay = QVBoxLayout(self); lay.setContentsMargins(18, 18, 18, 14)
@@ -171,10 +172,10 @@ class VistaImpostazioni(VistaBase):
         lay.setSpacing(10)
 
         self.schede = QTabWidget()
-        self.schede.addTab(self._tab_conti(), "Conti")
-        self.schede.addTab(self._tab_categorie(), "Categorie")
-        self.schede.addTab(self._scorrevole(self._tab_aspetto()), "Aspetto")
-        self.schede.addTab(self._scorrevole(self._tab_dati()), "Dati e backup")
+        self.schede.addTab(self._tab_conti(), t("Conti"))
+        self.schede.addTab(self._tab_categorie(), t("Categorie"))
+        self.schede.addTab(self._scorrevole(self._tab_aspetto()), t("Aspetto"))
+        self.schede.addTab(self._scorrevole(self._tab_dati()), t("Dati e backup"))
         lay.addWidget(self.schede, 1)
 
         self.barra_esito = QLabel("")
@@ -214,29 +215,29 @@ class VistaImpostazioni(VistaBase):
 
         sc = Scheda()
         self.in_conto = QLineEdit()
-        self.in_conto.setPlaceholderText("Nome del conto")
+        self.in_conto.setPlaceholderText(t("Nome del conto"))
         self.in_tipo_conto = QComboBox(); self.in_tipo_conto.addItems(TIPI_CONTO)
         self.in_saldo = QDoubleSpinBox()
         self.in_saldo.setRange(-99_999_999, 99_999_999)
         self.in_saldo.setDecimals(2); self.in_saldo.setSingleStep(100)
         self.in_saldo.setGroupSeparatorShown(True)
         self.in_saldo.setMaximumWidth(220)
-        b_add = QPushButton("Aggiungi"); b_add.setObjectName("Primario")
+        b_add = QPushButton(t("Aggiungi")); b_add.setObjectName("Primario")
         sc.aggiungi_layout(riga(self.in_conto, self.in_tipo_conto,
-                                etichetta("saldo iniziale"), self.in_saldo, b_add))
+                                etichetta(t("saldo iniziale")), self.in_saldo, b_add))
         lay.addWidget(sc)
 
-        sc_tab = Scheda("Conti e portafogli")
+        sc_tab = Scheda(t("Conti e portafogli"))
         self.tab_conti = QTableWidget(0, 5)
         self.tab_conti.setHorizontalHeaderLabels(
-            ["Conto", "Tipo", "Saldo iniziale", "Saldo attuale", "Movimenti"])
+            [t("Conto"), t("Tipo"), t("Saldo iniziale"), t("Saldo attuale"), t("Movimenti")])
         self._prepara_tabella(self.tab_conti, larghezza_prima=260)
         self.tab_conti.doubleClicked.connect(self.modifica_conto)
         sc_tab.aggiungi(self.tab_conti)
 
-        b_mod = QPushButton("Modifica")
-        b_rinomina = QPushButton("Rinomina")
-        b_del = QPushButton("Elimina"); b_del.setObjectName("Pericolo")
+        b_mod = QPushButton(t("Modifica"))
+        b_rinomina = QPushButton(t("Rinomina"))
+        b_del = QPushButton(t("Elimina")); b_del.setObjectName("Pericolo")
         self.tab_conti.setToolTip(
             "Doppio clic per modificare un conto.\n"
             "Rinominandolo, i movimenti collegati vengono aggiornati.")
@@ -256,14 +257,14 @@ class VistaImpostazioni(VistaBase):
         lay.setContentsMargins(12, 14, 12, 12)
 
         # ---------------------------------------------------- nuova categoria
-        sc = Scheda("Nuova categoria")
+        sc = Scheda(t("Nuova categoria"))
         self.barra_nuova = BarraNuovaCategoria(self.db, colori=self.c)
         self.barra_nuova.creata.connect(self._categoria_creata)
         self.barra_nuova.rifiutata.connect(lambda m: self._avviso(m))
         sc.aggiungi(self.barra_nuova)
         lay.addWidget(sc)
 
-        sc_tab = Scheda("Categorie")
+        sc_tab = Scheda(t("Categorie"))
         self.filtro_cat = QButtonGroup(self)
         barra_filtri = riga()
         for i, testo in enumerate(("Tutte", "Uscite", "Entrate")):
@@ -272,7 +273,7 @@ class VistaImpostazioni(VistaBase):
             self.filtro_cat.addButton(b, i)
             barra_filtri.addWidget(b)
         self.cerca_cat = QLineEdit()
-        self.cerca_cat.setPlaceholderText("Cerca categoria…")
+        self.cerca_cat.setPlaceholderText(t("Cerca categoria…"))
         self.cerca_cat.setClearButtonEnabled(True)
         barra_filtri.addStretch(1)
         barra_filtri.addWidget(self.cerca_cat)
@@ -280,16 +281,16 @@ class VistaImpostazioni(VistaBase):
 
         self.tab_cat = QTableWidget(0, 5)
         self.tab_cat.setHorizontalHeaderLabels(
-            ["Icona", "Categoria", "Tipo", "Colore", "Movimenti"])
+            [t("Icona"), t("Categoria"), t("Tipo"), t("Colore"), t("Movimenti")])
         self._prepara_tabella(self.tab_cat, larghezza_prima=70)
         self.tab_cat.doubleClicked.connect(self.modifica_categoria)
         sc_tab.aggiungi(self.tab_cat)
 
-        b_mod = QPushButton("Modifica")
-        b_icona = QPushButton("Icona rapida")
-        b_colore = QPushButton("Colore rapido")
-        b_unisci = QPushButton("Unisci in…")
-        b_del = QPushButton("Elimina"); b_del.setObjectName("Pericolo")
+        b_mod = QPushButton(t("Modifica"))
+        b_icona = QPushButton(t("Icona rapida"))
+        b_colore = QPushButton(t("Colore rapido"))
+        b_unisci = QPushButton(t("Unisci in…"))
+        b_del = QPushButton(t("Elimina")); b_del.setObjectName("Pericolo")
         self.tab_cat.setToolTip("Doppio clic per modificare nome, icona, tipo e colore.")
         b_unisci.setToolTip("Sposta tutti i movimenti in un'altra categoria "
                             "ed elimina questa")
@@ -310,7 +311,7 @@ class VistaImpostazioni(VistaBase):
         w = QWidget(); lay = QVBoxLayout(w); lay.setSpacing(12)
         lay.setContentsMargins(12, 14, 12, 12)
 
-        sc_tema = Scheda("Tema")
+        sc_tema = Scheda(t("Tema"))
         sc_tema.setToolTip("Si applica subito a tutta l'applicazione · Ctrl+T")
         self.gruppo_tema = QButtonGroup(self)
         fila = riga()
@@ -323,7 +324,7 @@ class VistaImpostazioni(VistaBase):
         sc_tema.aggiungi_layout(fila)
         lay.addWidget(sc_tema)
 
-        sc_colore = Scheda("Colore principale")
+        sc_colore = Scheda(t("Colore principale"))
         self.gruppo_accento = QButtonGroup(self)
         self.pulsanti_accento: dict[str, QPushButton] = {}
         griglia_colori = QGridLayout()
@@ -340,7 +341,7 @@ class VistaImpostazioni(VistaBase):
         sc_colore.aggiungi_layout(griglia_colori)
         lay.addWidget(sc_colore)
 
-        sc_icone = Scheda("Stile delle icone")
+        sc_icone = Scheda(t("Stile delle icone"))
         self.gruppo_stile = QButtonGroup(self)
         self.pulsanti_stile: dict[str, QToolButton] = {}
         griglia_stili = QGridLayout()
@@ -365,16 +366,22 @@ class VistaImpostazioni(VistaBase):
         sc_icone.aggiungi_layout(griglia_stili)
         lay.addWidget(sc_icone)
 
-        sc_lingua = Scheda("Lingua")
+        sc_lingua = Scheda(t("Lingua"))
         self.gruppo_lingua = QButtonGroup(self)
         self.pulsanti_lingua: dict[str, QPushButton] = {}
         griglia_lingue = QGridLayout()
         griglia_lingue.setSpacing(8)
         for i, (codice, nome) in enumerate(LINGUE.items()):
-            b = QPushButton(nome)
+            disponibile = alfabeto_disponibile(codice)
+            b = QPushButton(nome if disponibile else f"{nome}  (font mancante)")
             b.setObjectName("Segmento")
             b.setCheckable(True)
-            b.setMinimumWidth(104)
+            b.setEnabled(disponibile)
+            b.setMinimumWidth(104 if disponibile else 190)
+            if not disponibile:
+                b.setToolTip(
+                    "Il sistema non ha un font con questi caratteri.\n"
+                    "Su Arch si installa con:  sudo pacman -S noto-fonts-cjk")
             self.gruppo_lingua.addButton(b, i)
             self.pulsanti_lingua[codice] = b
             griglia_lingue.addWidget(b, i // 5, i % 5)
@@ -382,7 +389,7 @@ class VistaImpostazioni(VistaBase):
         sc_lingua.aggiungi_layout(griglia_lingue)
         lay.addWidget(sc_lingua)
 
-        sc_testo = Scheda("Dimensione del testo")
+        sc_testo = Scheda(t("Dimensione del testo"))
         sc_testo.setToolTip("Ingrandisce testi e comandi di tutta l'applicazione")
         self.gruppo_scala = QButtonGroup(self)
         fila2 = riga()
@@ -395,7 +402,7 @@ class VistaImpostazioni(VistaBase):
         sc_testo.aggiungi_layout(fila2)
         lay.addWidget(sc_testo)
 
-        sc_val = Scheda("Valuta")
+        sc_val = Scheda(t("Valuta"))
         self.cmb_valuta = QComboBox()
         self.cmb_valuta.setEditable(True)
         self.cmb_valuta.addItems(VALUTE)
@@ -419,42 +426,42 @@ class VistaImpostazioni(VistaBase):
         w = QWidget(); lay = QVBoxLayout(w); lay.setSpacing(12)
         lay.setContentsMargins(12, 14, 12, 12)
 
-        sc_info = Scheda("Archivio")
+        sc_info = Scheda(t("Archivio"))
         self.et_info = QLabel(""); self.et_info.setWordWrap(True)
-        b_apri = QPushButton("Apri cartella dati")
+        b_apri = QPushButton(t("Apri cartella dati"))
         sc_info.aggiungi(self.et_info)
         sc_info.aggiungi_layout(riga(b_apri, None))
         lay.addWidget(sc_info)
 
-        sc_backup = Scheda("Backup")
-        b_rapido = QPushButton("Backup immediato"); b_rapido.setObjectName("Primario")
-        b_scegli = QPushButton("Backup in una cartella a scelta…")
-        b_ripristina = QPushButton("Ripristina da backup…")
+        sc_backup = Scheda(t("Backup"))
+        b_rapido = QPushButton(t("Backup immediato")); b_rapido.setObjectName("Primario")
+        b_scegli = QPushButton(t("Backup in una cartella a scelta…"))
+        b_ripristina = QPushButton(t("Ripristina da backup…"))
         sc_backup.aggiungi_layout(riga(b_rapido, b_scegli, b_ripristina, None))
         self.et_backup = QLabel(""); self.et_backup.setObjectName("NotaScheda")
         self.et_backup.setWordWrap(True)
         sc_backup.aggiungi(self.et_backup)
         lay.addWidget(sc_backup)
 
-        sc_scambio = Scheda("Importa ed esporta")
-        b_json = QPushButton("Esporta tutto in JSON")
-        b_csv = QPushButton("Esporta movimenti in CSV")
-        b_imp = QPushButton("Importa movimenti da CSV…")
+        sc_scambio = Scheda(t("Importa ed esporta"))
+        b_json = QPushButton(t("Esporta tutto in JSON"))
+        b_csv = QPushButton(t("Esporta movimenti in CSV"))
+        b_imp = QPushButton(t("Importa movimenti da CSV…"))
         b_imp.setToolTip("Colonne attese: data;tipo;importo;categoria;conto;descrizione\n"
                          "Date accettate come gg/mm/aaaa o aaaa-mm-gg")
         sc_scambio.aggiungi_layout(riga(b_json, b_csv, b_imp, None))
         lay.addWidget(sc_scambio)
 
-        sc_pericolo = Scheda("Operazioni irreversibili")
+        sc_pericolo = Scheda(t("Operazioni irreversibili"))
         sc_pericolo.setToolTip("Prima di ogni operazione viene creato "
                                "automaticamente un backup")
-        b_azzera = QPushButton("Azzera tutti i movimenti")
+        b_azzera = QPushButton(t("Azzera tutti i movimenti"))
         b_azzera.setObjectName("Pericolo")
-        b_reset = QPushButton("Ripristina categorie predefinite")
+        b_reset = QPushButton(t("Ripristina categorie predefinite"))
         sc_pericolo.aggiungi_layout(riga(b_azzera, b_reset, None))
         lay.addWidget(sc_pericolo)
 
-        sc_priv = Scheda("Privacy")
+        sc_priv = Scheda(t("Privacy"))
         testo = QLabel("Finance funziona interamente in locale: nessun dato lascia questo "
                        "computer e non viene effettuata alcuna connessione di rete. "
                        "L'archivio è un singolo file SQLite che puoi copiare, spostare "

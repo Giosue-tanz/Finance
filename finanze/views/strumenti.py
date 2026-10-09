@@ -11,6 +11,7 @@ from ..componenti import Scheda, etichetta, riga
 from ..grafici import GraficoLinea
 from ..utils import euro
 from . import VistaBase
+from ..lingue import t
 
 
 def _modulo() -> QFormLayout:
@@ -45,25 +46,25 @@ class VistaStrumenti(VistaBase):
     def costruisci(self) -> None:
         _, lay = self.area_scorrevole()
         schede = QTabWidget()
-        schede.addTab(self._prestito(), "Prestito / Mutuo")
-        schede.addTab(self._interesse(), "Interesse composto")
-        schede.addTab(self._obiettivo(), "Piano di risparmio")
-        schede.addTab(self._regola(), "Regola 50/30/20")
-        schede.addTab(self._iva(), "IVA e sconti")
-        schede.addTab(self._divisione(), "Dividi spese")
+        schede.addTab(self._prestito(), t("Prestito / Mutuo"))
+        schede.addTab(self._interesse(), t("Interesse composto"))
+        schede.addTab(self._obiettivo(), t("Piano di risparmio"))
+        schede.addTab(self._regola(), t("Regola 50/30/20"))
+        schede.addTab(self._iva(), t("IVA e sconti"))
+        schede.addTab(self._divisione(), t("Dividi spese"))
         lay.addWidget(schede, 1)
         self.aggiorna()
 
     # ------------------------------------------------------- prestito / mutuo
     def _prestito(self) -> QWidget:
         w = QWidget(); lay = QVBoxLayout(w); lay.setSpacing(12)
-        sc = Scheda("Dati del finanziamento")
+        sc = Scheda(t("Dati del finanziamento"))
         self.p_capitale = _spin(100_000, suffisso=f" {self.valuta}", passo=1000)
         self.p_tasso = _spin(3.5, 100, " %", 2, 0.1)
         self.p_anni = QSpinBox(); self.p_anni.setRange(1, 50); self.p_anni.setValue(20)
         self.p_anni.setMaximumWidth(260); self.p_anni.setMinimumWidth(190)
         self.p_anni.setSuffix(" anni")
-        b = QPushButton("Calcola"); b.setObjectName("Primario")
+        b = QPushButton(t("Calcola")); b.setObjectName("Primario")
         modulo = _modulo()
         modulo.addRow("Capitale", self.p_capitale)
         modulo.addRow("Tasso annuo (TAN)", self.p_tasso)
@@ -74,14 +75,14 @@ class VistaStrumenti(VistaBase):
 
         self.p_risultato = QLabel("—"); self.p_risultato.setObjectName("Sezione")
         self.p_dettaglio = QLabel(""); self.p_dettaglio.setObjectName("NotaScheda")
-        sc_res = Scheda("Risultato")
+        sc_res = Scheda(t("Risultato"))
         sc_res.aggiungi(self.p_risultato); sc_res.aggiungi(self.p_dettaglio)
         lay.addWidget(sc_res)
 
-        sc_tab = Scheda("Piano di ammortamento (primi 24 mesi)")
+        sc_tab = Scheda(t("Piano di ammortamento (primi 24 mesi)"))
         self.p_tab = QTableWidget(0, 5)
         self.p_tab.setHorizontalHeaderLabels(
-            ["Rata", "Quota capitale", "Quota interessi", "Rata totale", "Debito residuo"])
+            [t("Rata"), t("Quota capitale"), t("Quota interessi"), t("Rata totale"), t("Debito residuo")])
         self.p_tab.verticalHeader().setVisible(False)
         self.p_tab.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.p_tab.setMinimumHeight(300)
@@ -129,14 +130,14 @@ class VistaStrumenti(VistaBase):
     # ------------------------------------------------------ interesse composto
     def _interesse(self) -> QWidget:
         w = QWidget(); lay = QVBoxLayout(w); lay.setSpacing(12)
-        sc = Scheda("Capitale e versamenti")
+        sc = Scheda(t("Capitale e versamenti"))
         self.i_iniziale = _spin(5_000, suffisso=f" {self.valuta}", passo=500)
         self.i_mensile = _spin(200, suffisso=f" {self.valuta}", passo=50)
         self.i_tasso = _spin(5.0, 100, " % annuo", 2, 0.25)
         self.i_anni = QSpinBox(); self.i_anni.setRange(1, 70); self.i_anni.setValue(15)
         self.i_anni.setMaximumWidth(260); self.i_anni.setMinimumWidth(190)
         self.i_anni.setSuffix(" anni")
-        b = QPushButton("Calcola"); b.setObjectName("Primario")
+        b = QPushButton(t("Calcola")); b.setObjectName("Primario")
         modulo = _modulo()
         modulo.addRow("Capitale iniziale", self.i_iniziale)
         modulo.addRow("Versamento mensile", self.i_mensile)
@@ -147,7 +148,7 @@ class VistaStrumenti(VistaBase):
 
         self.i_risultato = QLabel("—"); self.i_risultato.setObjectName("Sezione")
         self.i_dettaglio = QLabel(""); self.i_dettaglio.setObjectName("NotaScheda")
-        sc_res = Scheda("Proiezione")
+        sc_res = Scheda(t("Proiezione"))
         sc_res.aggiungi(self.i_risultato); sc_res.aggiungi(self.i_dettaglio)
         self.i_grafico = GraficoLinea(self.c); self.i_grafico.setMinimumHeight(260)
         sc_res.aggiungi(self.i_grafico, 1)
@@ -181,14 +182,14 @@ class VistaStrumenti(VistaBase):
     # ---------------------------------------------------- piano di risparmio
     def _obiettivo(self) -> QWidget:
         w = QWidget(); lay = QVBoxLayout(w); lay.setSpacing(12)
-        sc = Scheda("Quanto devo mettere da parte?")
+        sc = Scheda(t("Quanto devo mettere da parte?"))
         self.o_target = _spin(10_000, suffisso=f" {self.valuta}", passo=500)
         self.o_attuale = _spin(1_000, suffisso=f" {self.valuta}", passo=100)
         self.o_mesi = QSpinBox(); self.o_mesi.setRange(1, 600); self.o_mesi.setValue(24)
         self.o_mesi.setMaximumWidth(260); self.o_mesi.setMinimumWidth(190)
         self.o_mesi.setSuffix(" mesi")
         self.o_tasso = _spin(0.0, 100, " % annuo", 2, 0.25)
-        b = QPushButton("Calcola"); b.setObjectName("Primario")
+        b = QPushButton(t("Calcola")); b.setObjectName("Primario")
         modulo = _modulo()
         modulo.addRow("Obiettivo", self.o_target)
         modulo.addRow("Già disponibile", self.o_attuale)
@@ -199,7 +200,7 @@ class VistaStrumenti(VistaBase):
         self.o_risultato = QLabel("—"); self.o_risultato.setObjectName("Sezione")
         self.o_dettaglio = QLabel(""); self.o_dettaglio.setObjectName("NotaScheda")
         self.o_dettaglio.setWordWrap(True)
-        sc_res = Scheda("Risultato")
+        sc_res = Scheda(t("Risultato"))
         sc_res.aggiungi(self.o_risultato); sc_res.aggiungi(self.o_dettaglio)
         lay.addWidget(sc_res); lay.addStretch(1)
         b.clicked.connect(self._calcola_obiettivo)
@@ -226,21 +227,21 @@ class VistaStrumenti(VistaBase):
     # ------------------------------------------------------- regola 50/30/20
     def _regola(self) -> QWidget:
         w = QWidget(); lay = QVBoxLayout(w); lay.setSpacing(12)
-        sc = Scheda("Ripartizione consigliata del reddito netto")
+        sc = Scheda(t("Ripartizione consigliata del reddito netto"))
         self.r_reddito = _spin(1_800, suffisso=f" {self.valuta}", passo=100)
-        b = QPushButton("Calcola"); b.setObjectName("Primario")
-        b_reale = QPushButton("Usa le entrate reali del mese")
+        b = QPushButton(t("Calcola")); b.setObjectName("Primario")
+        b_reale = QPushButton(t("Usa le entrate reali del mese"))
         modulo = _modulo(); modulo.addRow("Entrate nette mensili", self.r_reddito)
         sc.aggiungi_layout(modulo); sc.aggiungi_layout(riga(b, b_reale, None))
         lay.addWidget(sc)
         self.r_tab = QTableWidget(0, 4)
         self.r_tab.setHorizontalHeaderLabels(
-            ["Voce", "Quota", "Importo consigliato", "Speso realmente nel mese"])
+            [t("Voce"), t("Quota"), t("Importo consigliato"), t("Speso realmente nel mese")])
         self.r_tab.verticalHeader().setVisible(False)
         self.r_tab.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.r_tab.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.r_tab.setMinimumHeight(190)
-        sc_t = Scheda("Risultato"); sc_t.aggiungi(self.r_tab)
+        sc_t = Scheda(t("Risultato")); sc_t.aggiungi(self.r_tab)
         self.r_nota = QLabel(""); self.r_nota.setObjectName("NotaScheda")
         self.r_nota.setWordWrap(True)
         sc_t.aggiungi(self.r_nota)
@@ -282,7 +283,7 @@ class VistaStrumenti(VistaBase):
     # --------------------------------------------------------------- IVA
     def _iva(self) -> QWidget:
         w = QWidget(); lay = QVBoxLayout(w); lay.setSpacing(12)
-        sc = Scheda("Calcolo IVA")
+        sc = Scheda(t("Calcolo IVA"))
         self.v_importo = _spin(100, suffisso=f" {self.valuta}", passo=10)
         self.v_aliquota = QComboBox(); self.v_aliquota.addItems(["22", "10", "5", "4", "0"])
         self.v_aliquota.setMaximumWidth(260)
@@ -298,7 +299,7 @@ class VistaStrumenti(VistaBase):
         sc.aggiungi(self.v_risultato)
         lay.addWidget(sc)
 
-        sc2 = Scheda("Sconto")
+        sc2 = Scheda(t("Sconto"))
         self.s_prezzo = _spin(80, suffisso=f" {self.valuta}", passo=5)
         self.s_sconto = _spin(20, 100, " %", 2, 1)
         m2 = _modulo()
@@ -339,7 +340,7 @@ class VistaStrumenti(VistaBase):
     # ----------------------------------------------------------- dividi spese
     def _divisione(self) -> QWidget:
         w = QWidget(); lay = QVBoxLayout(w); lay.setSpacing(12)
-        sc = Scheda("Dividi una spesa tra più persone")
+        sc = Scheda(t("Dividi una spesa tra più persone"))
         self.d_totale = _spin(120, suffisso=f" {self.valuta}", passo=10)
         self.d_persone = QSpinBox(); self.d_persone.setRange(1, 200); self.d_persone.setValue(4)
         self.d_persone.setMaximumWidth(260); self.d_persone.setMinimumWidth(190)

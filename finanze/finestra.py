@@ -172,6 +172,9 @@ class FinestraPrincipale(QMainWindow):
             self.barra.setFixedWidth(LARGHEZZA_CHIUSA if chiusa else LARGHEZZA_APERTA)
         self.b_menu.setVisible(not chiusa)
         self.b_logo.setVisible(True)        # il simbolo resta in entrambi gli stati
+        # da aperta affianca il nome come un'icona; da chiusa è il comando principale
+        self.b_logo.setFixedSize(*((46, 42) if chiusa else (32, 30)))
+        self.b_logo.setIconSize(QSize(32, 32) if chiusa else QSize(22, 22))
         self.b_logo.setToolTip("Apri il menu  (Ctrl+B)" if chiusa
                                else "Chiudi il menu  (Ctrl+B)")
         # da chiusa la testata non ha margini: il simbolo resta sull'asse

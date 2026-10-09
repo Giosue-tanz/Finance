@@ -15,6 +15,7 @@ from ..componenti import (Scheda, SchedaStat, abilita_deselezione, etichetta,
 from ..ricorrenze import prossima
 from ..utils import data_it, euro
 from . import VistaBase
+from ..lingue import t
 
 FREQUENZE = ["settimanale", "quindicinale", "mensile", "trimestrale", "annuale"]
 
@@ -28,7 +29,7 @@ class DialogoRicorrente(QDialog):
         self.setMinimumWidth(430)
         v = db.leggi("valuta", "€")
 
-        self.descrizione = QLineEdit(); self.descrizione.setPlaceholderText("es. Affitto")
+        self.descrizione = QLineEdit(); self.descrizione.setPlaceholderText(t("es. Affitto"))
         self.tipo = QComboBox(); self.tipo.addItems(["uscita", "entrata"])
         self.importo = QDoubleSpinBox(); self.importo.setRange(0.01, 9_999_999)
         self.importo.setDecimals(2); self.importo.setSuffix(f" {v}")
@@ -54,9 +55,9 @@ class DialogoRicorrente(QDialog):
         modulo.addRow("", self.attiva)
 
         bb = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-        bb.button(QDialogButtonBox.Save).setText("Salva")
+        bb.button(QDialogButtonBox.Save).setText(t("Salva"))
         bb.button(QDialogButtonBox.Save).setObjectName("Primario")
-        bb.button(QDialogButtonBox.Cancel).setText("Annulla")
+        bb.button(QDialogButtonBox.Cancel).setText(t("Annulla"))
         bb.accepted.connect(self.accept); bb.rejected.connect(self.reject)
         lay = QVBoxLayout(self); lay.setContentsMargins(18, 18, 18, 14)
         lay.addLayout(modulo); lay.addWidget(bb)
@@ -121,18 +122,18 @@ class VistaRicorrenti(VistaBase):
             fila.addWidget(s)
         lay.addLayout(fila)
 
-        b_nuovo = QPushButton("+  Nuova ricorrenza"); b_nuovo.setObjectName("Primario")
-        b_mod = QPushButton("Modifica")
-        b_attiva = QPushButton("Attiva / sospendi")
-        b_del = QPushButton("Elimina"); b_del.setObjectName("Pericolo")
-        b_genera = QPushButton("Genera movimenti dovuti")
+        b_nuovo = QPushButton(t("+  Nuova ricorrenza")); b_nuovo.setObjectName("Primario")
+        b_mod = QPushButton(t("Modifica"))
+        b_attiva = QPushButton(t("Attiva / sospendi"))
+        b_del = QPushButton(t("Elimina")); b_del.setObjectName("Pericolo")
+        b_genera = QPushButton(t("Genera movimenti dovuti"))
         lay.addLayout(riga(b_nuovo, b_mod, b_attiva, b_del, None, b_genera))
 
-        sc = Scheda("Regole configurate")
+        sc = Scheda(t("Regole configurate"))
         self.tab = QTableWidget(0, 8)
         self.tab.setHorizontalHeaderLabels(
-            ["Descrizione", "Tipo", "Importo", "Categoria", "Conto",
-             "Frequenza", "Prossima", "Stato"])
+            [t("Descrizione"), t("Tipo"), t("Importo"), t("Categoria"), t("Conto"),
+             t("Frequenza"), t("Prossima"), t("Stato")])
         self.tab.verticalHeader().setVisible(False)
         self.tab.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tab.setSelectionBehavior(QAbstractItemView.SelectRows)

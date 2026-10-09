@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (QDateEdit, QDialog, QDialogButtonBox, QDoubleSpin
 from ..componenti import Scheda, etichetta, riga
 from ..utils import data_it, euro
 from . import VistaBase
+from ..lingue import t
 
 
 class DialogoObiettivo(QDialog):
@@ -23,7 +24,7 @@ class DialogoObiettivo(QDialog):
         self.obiettivo = dict(obiettivo) if obiettivo else None
 
         self.nome = QLineEdit()
-        self.nome.setPlaceholderText("es. Fondo emergenza")
+        self.nome.setPlaceholderText(t("es. Fondo emergenza"))
         self.target = QDoubleSpinBox(); self.target.setRange(1, 99_999_999)
         self.target.setDecimals(2); self.target.setSuffix(f" {valuta}")
         self.target.setValue(1000)
@@ -43,9 +44,9 @@ class DialogoObiettivo(QDialog):
         modulo.addRow("Note", self.note)
 
         bb = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-        bb.button(QDialogButtonBox.Save).setText("Salva")
+        bb.button(QDialogButtonBox.Save).setText(t("Salva"))
         bb.button(QDialogButtonBox.Save).setObjectName("Primario")
-        bb.button(QDialogButtonBox.Cancel).setText("Annulla")
+        bb.button(QDialogButtonBox.Cancel).setText(t("Annulla"))
         bb.accepted.connect(self.accept); bb.rejected.connect(self.reject)
 
         lay = QVBoxLayout(self)
@@ -82,7 +83,7 @@ class VistaObiettivi(VistaBase):
 
     def costruisci(self) -> None:
         _, lay = self.area_scorrevole()
-        b_nuovo = QPushButton("+  Nuovo obiettivo"); b_nuovo.setObjectName("Primario")
+        b_nuovo = QPushButton(t("+  Nuovo obiettivo")); b_nuovo.setObjectName("Primario")
         self.et_totale = QLabel(""); self.et_totale.setObjectName("NotaScheda")
         lay.addLayout(riga(b_nuovo, None, self.et_totale))
 
@@ -108,7 +109,7 @@ class VistaObiettivi(VistaBase):
         righe = self.db.query("SELECT * FROM obiettivi ORDER BY id DESC")
         if not righe:
             sc = Scheda()
-            sc.aggiungi(etichetta("Nessun obiettivo di risparmio.", "NotaScheda"))
+            sc.aggiungi(etichetta(t("Nessun obiettivo di risparmio."), "NotaScheda"))
             self.griglia.addWidget(sc, 0, 0)
             self.et_totale.setText("")
             return
@@ -130,9 +131,9 @@ class VistaObiettivi(VistaBase):
             nota = QLabel(self._stima(o, target - acc)); nota.setObjectName("NotaScheda")
             nota.setWordWrap(True)
 
-            b_versa = QPushButton("Accantona…")
-            b_mod = QPushButton("Modifica")
-            b_del = QPushButton("Elimina"); b_del.setObjectName("Pericolo")
+            b_versa = QPushButton(t("Accantona…"))
+            b_mod = QPushButton(t("Modifica"))
+            b_del = QPushButton(t("Elimina")); b_del.setObjectName("Pericolo")
             b_versa.clicked.connect(lambda _=False, r=o: self.accantona(r))
             b_mod.clicked.connect(lambda _=False, r=o: self.modifica(r))
             b_del.clicked.connect(lambda _=False, r=o: self.elimina(r))

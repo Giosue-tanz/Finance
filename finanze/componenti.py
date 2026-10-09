@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (QComboBox, QDateEdit, QDialog, QDialogButtonBox,
 from .grafici import Sparkline
 from .icone import etichetta_categoria, solo_nome
 from .utils import euro
+from .lingue import t
 
 
 class Scheda(QFrame):
@@ -209,9 +210,9 @@ class DialogoMovimento(QDialog):
         fila_categoria.addWidget(self.b_nuova_categoria)
         self.conto = QComboBox(); self.conto.addItems(conti)
         self.descrizione = QLineEdit()
-        self.descrizione.setPlaceholderText("es. Spesa settimanale")
+        self.descrizione.setPlaceholderText(t("es. Spesa settimanale"))
         self.etichette = QLineEdit()
-        self.etichette.setPlaceholderText("etichette separate da virgola (opzionale)")
+        self.etichette.setPlaceholderText(t("etichette separate da virgola (opzionale)"))
 
         modulo = QFormLayout()
         modulo.setSpacing(10)
@@ -224,9 +225,9 @@ class DialogoMovimento(QDialog):
         modulo.addRow("Etichette", self.etichette)
 
         bottoni = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-        bottoni.button(QDialogButtonBox.Save).setText("Salva")
+        bottoni.button(QDialogButtonBox.Save).setText(t("Salva"))
         bottoni.button(QDialogButtonBox.Save).setObjectName("Primario")
-        bottoni.button(QDialogButtonBox.Cancel).setText("Annulla")
+        bottoni.button(QDialogButtonBox.Cancel).setText(t("Annulla"))
         bottoni.accepted.connect(self.accept)
         bottoni.rejected.connect(self.reject)
 

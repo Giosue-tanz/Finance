@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (QButtonGroup, QColorDialog, QDialog, QFrame,
 
 from .icone import ICONA_PREDEFINITA, SelettoreIcona, icona_suggerita
 from .tema import PALETTE_GRAFICI, colori as colori_tema
+from .lingue import t
 
 ALTEZZA = 38
 
@@ -170,7 +171,7 @@ class BarraNuovaCategoria(QFrame):
 
         self.nome = QLineEdit()
         self.nome.setObjectName("CampoCompositore")
-        self.nome.setPlaceholderText("Nome della categoria")
+        self.nome.setPlaceholderText(t("Nome della categoria"))
         self.nome.setMinimumHeight(ALTEZZA)
         self.nome.textEdited.connect(self._nome_cambiato)
         self.nome.returnPressed.connect(self.conferma)
@@ -274,7 +275,7 @@ class DialogoNuovaCategoria(QDialog):
     def __init__(self, db, tipo: str = "uscita", nome_iniziale: str = "",
                  colori: dict | None = None, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Nuova categoria")
+        self.setWindowTitle(t("Nuova categoria"))
         self.setMinimumWidth(560)
         self.nome_creato = ""
 
@@ -293,7 +294,7 @@ class DialogoNuovaCategoria(QDialog):
         self.et_errore.setObjectName("NotaScheda")
         lay.addWidget(self.et_errore)
 
-        annulla = QPushButton("Annulla")
+        annulla = QPushButton(t("Annulla"))
         annulla.clicked.connect(self.reject)
         lay.addWidget(annulla, 0, Qt.AlignRight)
         self.barra.nome.setFocus()

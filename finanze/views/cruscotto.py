@@ -19,6 +19,7 @@ from ..sezioni import ContenitoreSezioni, Sezione
 from ..utils import (FINESTRE, PERIODI, data_it, etichetta_mese, euro, intervallo,
                      intervallo_precedente, mese_corrente, mese_precedente)
 from . import VistaBase
+from ..lingue import t
 
 DISPOSIZIONE_PREDEFINITA = [
     ["saldo", "entrate", "uscite", "risparmio"],
@@ -74,7 +75,7 @@ class VistaCruscotto(VistaBase):
     # ------------------------------------------------------------ strumenti
     def _prepara_menu_sezioni(self) -> None:
         """Pulsante «Sezioni», mostrato dalla finestra accanto a «Nuovo movimento»."""
-        self.b_sezioni = QPushButton("Sezioni")
+        self.b_sezioni = QPushButton(t("Sezioni"))
         self.b_sezioni.setToolTip(
             "Mostra o nascondi i riquadri e ripristina la disposizione.\n\n"
             "Trascina un riquadro dal titolo per spostarlo, anche su una riga nuova.\n"
@@ -125,7 +126,7 @@ class VistaCruscotto(VistaBase):
 
         self.tab = QTableWidget(0, 5)
         self.tab.setHorizontalHeaderLabels(
-            ["Data", "Descrizione", "Categoria", "Conto", "Importo"])
+            [t("Data"), t("Descrizione"), t("Categoria"), t("Conto"), t("Importo")])
         self.tab.verticalHeader().setVisible(False)
         self.tab.setEditTriggers(QTableWidget.NoEditTriggers)
         self.tab.setSelectionBehavior(QTableWidget.SelectRows)
@@ -353,7 +354,7 @@ class VistaCruscotto(VistaBase):
 
         budget = self.db.query("SELECT * FROM budget WHERE mensile > 0 ORDER BY mensile DESC")
         if not budget:
-            self.lay_budget.addWidget(etichetta("Nessun budget impostato.",
+            self.lay_budget.addWidget(etichetta(t("Nessun budget impostato."),
                                                 "NotaScheda"))
             self.lay_budget.addStretch(1)
             return

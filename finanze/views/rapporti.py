@@ -14,6 +14,7 @@ from ..icone import etichetta_categoria
 from ..utils import (anno_corrente, data_it, etichetta_mese, euro, mese_corrente,
                      mese_precedente)
 from . import VistaBase
+from ..lingue import t
 
 
 class VistaRapporti(VistaBase):
@@ -32,9 +33,9 @@ class VistaRapporti(VistaBase):
         self.al = QDateEdit(QDate.currentDate())
         for d in (self.dal, self.al):
             d.setCalendarPopup(True); d.setDisplayFormat("dd/MM/yyyy"); d.setEnabled(False)
-        sc_filtri.aggiungi_layout(riga(etichetta("Periodo"), self.cmb_periodo,
-                                       etichetta("dal"), self.dal,
-                                       etichetta("al"), self.al, None))
+        sc_filtri.aggiungi_layout(riga(etichetta(t("Periodo")), self.cmb_periodo,
+                                       etichetta(t("dal")), self.dal,
+                                       etichetta(t("al")), self.al, None))
         lay.addWidget(sc_filtri)
 
         fila = riga()
@@ -47,30 +48,30 @@ class VistaRapporti(VistaBase):
         lay.addLayout(fila)
 
         f2 = riga()
-        sc_u = Scheda("Ripartizione uscite")
+        sc_u = Scheda(t("Ripartizione uscite"))
         self.g_uscite = GraficoCiambella(self.c); self.g_uscite.setMinimumHeight(250)
         sc_u.aggiungi(self.g_uscite, 1); f2.addWidget(sc_u)
-        sc_e = Scheda("Ripartizione entrate")
+        sc_e = Scheda(t("Ripartizione entrate"))
         self.g_entrate = GraficoCiambella(self.c); self.g_entrate.setMinimumHeight(250)
         sc_e.aggiungi(self.g_entrate, 1); f2.addWidget(sc_e)
         lay.addLayout(f2)
 
-        sc_cat = Scheda("Classifica categorie di spesa")
+        sc_cat = Scheda(t("Classifica categorie di spesa"))
         self.g_classifica = GraficoBarre(self.c)
         self.g_classifica.orizzontale = True
         self.g_classifica.setMinimumHeight(300)
         sc_cat.aggiungi(self.g_classifica, 1)
         lay.addWidget(sc_cat)
 
-        sc_risp = Scheda("Risparmio netto mensile")
+        sc_risp = Scheda(t("Risparmio netto mensile"))
         self.g_risparmio = GraficoLinea(self.c); self.g_risparmio.setMinimumHeight(240)
         sc_risp.aggiungi(self.g_risparmio, 1)
         lay.addWidget(sc_risp)
 
-        sc_tab = Scheda("Dettaglio per categoria")
+        sc_tab = Scheda(t("Dettaglio per categoria"))
         self.tab = QTableWidget(0, 6)
         self.tab.setHorizontalHeaderLabels(
-            ["Categoria", "Tipo", "Movimenti", "Totale", "Media", "Quota"])
+            [t("Categoria"), t("Tipo"), t("Movimenti"), t("Totale"), t("Media"), t("Quota")])
         self.tab.verticalHeader().setVisible(False)
         self.tab.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tab.setSortingEnabled(True)
@@ -82,10 +83,10 @@ class VistaRapporti(VistaBase):
         sc_tab.aggiungi(self.tab)
         lay.addWidget(sc_tab)
 
-        sc_mesi = Scheda("Riepilogo mensile")
+        sc_mesi = Scheda(t("Riepilogo mensile"))
         self.tab_mesi = QTableWidget(0, 5)
         self.tab_mesi.setHorizontalHeaderLabels(
-            ["Mese", "Entrate", "Uscite", "Risparmio", "Tasso di risparmio"])
+            [t("Mese"), t("Entrate"), t("Uscite"), t("Risparmio"), t("Tasso di risparmio")])
         self.tab_mesi.verticalHeader().setVisible(False)
         self.tab_mesi.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tab_mesi.setMinimumHeight(280)
