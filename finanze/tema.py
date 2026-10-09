@@ -319,7 +319,7 @@ def foglio_stile(c: dict, scala: float = 1.0,
     QFrame#DivisoreCompositore {{ background: {c['testo2']}; border: none; }}
     QPushButton#IconaCompositore {{
         background: {c['pannello']}; border: 1px solid {c['bordo']};
-        border-radius: 9px; font-size: {p(18)};
+        border-radius: 9px; font-size: {p(18)}; padding: 0;
     }}
     QPushButton#IconaCompositore:hover {{ border-color: {c['accento']}; }}
     QPushButton#ColoreCompositore {{ border: none; border-radius: 9px; }}

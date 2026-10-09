@@ -45,16 +45,16 @@ def crea(db, nome: str, tipo: str, icona: str = "", colore: str = "") -> str:
 
 
 class SceltaTipo(QWidget):
-    """Scelta fra uscita ed entrata: due tasti distinti, ognuno col suo colore.
+    """Scelta fra uscita ed entrata: due tasti normali che cambiano colore.
 
-    Nessun contenitore comune e nessun cursore che scorre: ogni opzione ha la
-    propria freccia e la propria tinta, e quando viene scelta si riempie del
-    suo colore mentre l'altra si svuota.
+    L'aspetto resta quello dei pulsanti dell'applicazione: a cambiare sono solo
+    il colore del testo e del bordo, che virano al rosso delle uscite o al verde
+    delle entrate quando l'opzione è scelta.
     """
 
     cambiato = Signal(str)
     DURATA = 200
-    OPZIONI = (("uscita", "Uscita", "↓"), ("entrata", "Entrata", "↑"))
+    OPZIONI = (("uscita", "Uscita"), ("entrata", "Entrata"))
 
     def __init__(self, tipo: str = "uscita", colori: dict | None = None, parent=None):
         super().__init__(parent)
@@ -66,8 +66,8 @@ class SceltaTipo(QWidget):
         lay.setSpacing(7)
         self.gruppo = QButtonGroup(self)
         self.bottoni: list[QPushButton] = []
-        for i, (chiave, etichetta, freccia) in enumerate(self.OPZIONI):
-            b = QPushButton(f"{freccia}  {etichetta}")
+        for i, (chiave, etichetta) in enumerate(self.OPZIONI):
+            b = QPushButton(etichetta)
             b.setObjectName("TastoTipo")
             b.setCheckable(True)
             b.setChecked(chiave == tipo)
@@ -87,27 +87,29 @@ class SceltaTipo(QWidget):
         self._ridisegna()
 
     # ------------------------------------------------------------- aspetto
-    @staticmethod
-    def _velata(colore: str, opacita: float) -> str:
-        c = QColor(colore)
-        return f"rgba({c.red()}, {c.green()}, {c.blue()}, {opacita:.3f})"
-
     def _ridisegna(self) -> None:
-        """Ogni tasto si riempie del proprio colore quanto è selezionato.
+        """Solo testo e bordo virano verso la tinta dell'opzione scelta.
 
-        Solo riempimento e bordo sfumano: scritta e freccia passano subito al
-        loro stato, senza transizioni di colore sul testo.
+        Lo sfondo non viene toccato: i tasti restano quelli standard
+        dell'applicazione e la selezione si legge dal colore.
         """
-        for i, (chiave, _etichetta, _freccia) in enumerate(self.OPZIONI):
+        for i, (chiave, _etichetta) in enumerate(self.OPZIONI):
             peso = self._avanzamento if i else 1.0 - self._avanzamento
-            tinta = self.c[chiave]
-            attivo = self.gruppo.checkedId() == i
+            tinta = QColor(self.c[chiave])
+            spento = QColor(self.c["testo2"])
+            neutro = QColor(self.c["bordo"])
+            misto = lambda a, b: int(round(a + (b - a) * peso))
+            testo = QColor(misto(spento.red(), tinta.red()),
+                           misto(spento.green(), tinta.green()),
+                           misto(spento.blue(), tinta.blue()))
+            bordo = QColor(misto(neutro.red(), tinta.red()),
+                           misto(neutro.green(), tinta.green()),
+                           misto(neutro.blue(), tinta.blue()))
             self.bottoni[i].setStyleSheet(
-                f"background: {self._velata(tinta, peso)};"
-                f"border: 1px solid {self._velata(tinta, 0.30 + 0.70 * peso)};"
-                f"border-radius: 9px; padding: 0 10px;"
-                f"color: {'#ffffff' if attivo else self.c['testo2']};"
-                f"font-weight: {700 if attivo else 500};")
+                f"border: 1px solid {bordo.name()};"
+                f"color: {testo.name()};"
+                f"font-weight: {600 if peso > 0.5 else 500};")
+
 
     def _fotogramma(self, avanzamento: float) -> None:
         self._avanzamento = float(avanzamento)
@@ -161,7 +163,7 @@ class BarraNuovaCategoria(QFrame):
 
         self.b_icona = QPushButton(self._icona)
         self.b_icona.setObjectName("IconaCompositore")
-        self.b_icona.setFixedSize(ALTEZZA, ALTEZZA)
+        self.b_icona.setFixedSize(ALTEZZA + 8, ALTEZZA)
         self.b_icona.setCursor(Qt.PointingHandCursor)
         self.b_icona.setToolTip("L'icona segue il nome: clic per sceglierla fra 174")
         self.b_icona.clicked.connect(self._scegli_icona)
