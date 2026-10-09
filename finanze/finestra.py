@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (QApplication, QButtonGroup, QHBoxLayout, QLabel,
                                QStatusBar, QVBoxLayout, QWidget)
 
 from .icone_nav import STILE_PREDEFINITO, icona, icona_menu
+from .lingue import LINGUA_PREDEFINITA, imposta_lingua, t
 from .componenti import separatore
 from .db import APP_DIR, DATA_DIR, Database
 from .tema import (ACCENTO_PREDEFINITO, SCALE, colori, foglio_stile,
@@ -53,6 +54,10 @@ class FinestraPrincipale(QMainWindow):
         icona = os.path.join(APP_DIR, "risorse", "icona.png")
         if os.path.exists(icona):
             self.setWindowIcon(QIcon(icona))
+
+        # la lingua va fissata prima di costruire l'interfaccia: le etichette
+        # vengono tradotte mentre i widget nascono
+        imposta_lingua(db.leggi("lingua", LINGUA_PREDEFINITA))
 
         centrale = QWidget()
         self.setCentralWidget(centrale)
@@ -112,6 +117,7 @@ class FinestraPrincipale(QMainWindow):
         self.spazio_testa = QSpacerItem(0, 0, QSizePolicy.Fixed, QSizePolicy.Minimum)
         testa.addItem(self.spazio_testa)
         testa.addWidget(self.b_logo)
+        testa.addSpacing(2)
         testa.addWidget(self.et_logo)
         testa.addStretch(1)
         testa.addWidget(self.b_menu)
@@ -142,7 +148,7 @@ class FinestraPrincipale(QMainWindow):
         piede = QVBoxLayout(self.riquadro_saldo)
         piede.setContentsMargins(14, 10, 14, 2)
         piede.setSpacing(1)
-        self.et_saldo_nota = QLabel("SALDO TOTALE")
+        self.et_saldo_nota = QLabel(t("SALDO TOTALE"))
         self.et_saldo_nota.setObjectName("EtichettaScheda")
         self.et_saldo = QLabel("—")
         self.et_saldo.setObjectName("SaldoBarra")
@@ -165,7 +171,9 @@ class FinestraPrincipale(QMainWindow):
         if applica_larghezza:
             self.barra.setFixedWidth(LARGHEZZA_CHIUSA if chiusa else LARGHEZZA_APERTA)
         self.b_menu.setVisible(not chiusa)
-        self.b_logo.setVisible(chiusa)
+        self.b_logo.setVisible(True)        # il simbolo resta in entrambi gli stati
+        self.b_logo.setToolTip("Apri il menu  (Ctrl+B)" if chiusa
+                               else "Chiudi il menu  (Ctrl+B)")
         # da chiusa la testata non ha margini: il simbolo resta sull'asse
         self.lay_testa.setContentsMargins(*((0, 0, 0, 0) if chiusa else (6, 0, 0, 0)))
         self.testata.setFixedHeight(44 if chiusa else 40)
@@ -191,8 +199,8 @@ class FinestraPrincipale(QMainWindow):
                 b.setMaximumSize(16777215, 16777215)
 
         for (nome_icona, classe), b in zip(VISTE, self.pulsanti):
-            b.setText("" if chiusa else f"   {classe.titolo}")
-            b.setToolTip(classe.titolo if chiusa else "")
+            b.setText("" if chiusa else f"   {t(classe.titolo)}")
+            b.setToolTip(t(classe.titolo) if chiusa else "")
             b.setProperty("compatta", "si" if chiusa else "no")
             b.style().unpolish(b)
             b.style().polish(b)
@@ -232,7 +240,7 @@ class FinestraPrincipale(QMainWindow):
         self.azioni_vista = QHBoxLayout()
         self.azioni_vista.setSpacing(8)
         testa.addLayout(self.azioni_vista)
-        self.b_rapido = QPushButton("+  Nuovo movimento")
+        self.b_rapido = QPushButton(t("+  Nuovo movimento"))
         self.b_rapido.setObjectName("Primario")
         self.b_rapido.clicked.connect(self.nuovo_movimento)
         testa.addWidget(self.b_rapido)
@@ -248,6 +256,8 @@ class FinestraPrincipale(QMainWindow):
             if hasattr(vista, "aspetto_cambiato"):
                 vista.aspetto_cambiato.connect(
                     lambda: self.applica_tema(self.db.leggi("tema", "scuro")))
+            if hasattr(vista, "lingua_cambiata"):
+                vista.lingua_cambiata.connect(self.applica_lingua)
             self.viste.append(vista)
             self.pila.addWidget(vista)
         lay.addWidget(self.pila, 1)
@@ -268,10 +278,18 @@ class FinestraPrincipale(QMainWindow):
         self.pulsanti[indice].setChecked(True)
         vista = self.viste[indice]
         self._comandi_vista(vista)
-        self.et_titolo.setText(vista.titolo)
-        self.et_sottotitolo.setText(vista.sottotitolo)
+        self.et_titolo.setText(t(vista.titolo))
+        self.et_sottotitolo.setText(t(vista.sottotitolo))
         self.b_rapido.setVisible(not isinstance(vista, VistaImpostazioni))
         vista.aggiorna()
+
+    def applica_lingua(self) -> None:
+        """Rilegge la lingua scelta e rinfresca le scritte già a schermo."""
+        imposta_lingua(self.db.leggi("lingua", LINGUA_PREDEFINITA))
+        self.et_saldo_nota.setText(t("SALDO TOTALE"))
+        self.b_rapido.setText(t("+  Nuovo movimento"))
+        self._disegna_barra()
+        self.vai(self.pila.currentIndex())
 
     def _comandi_vista(self, vista) -> None:
         """Mostra in alto a destra i comandi propri della vista attiva."""

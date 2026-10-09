@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QColorDialog,
 
 from ..componenti import Scheda, abilita_deselezione, etichetta, riga
 from ..categorie import BarraNuovaCategoria
+from ..lingue import LINGUA_PREDEFINITA, LINGUE, imposta_lingua
 from ..icone import ICONA_PREDEFINITA, SelettoreIcona, icona_suggerita
 from ..icone_nav import STILE_PREDEFINITO, STILI, anteprima_stile
 from ..tema import ACCENTI, ACCENTO_PREDEFINITO, PALETTE_GRAFICI, SCALE
@@ -162,6 +163,7 @@ class VistaImpostazioni(VistaBase):
 
     tema_cambiato = Signal(str)
     aspetto_cambiato = Signal()
+    lingua_cambiata = Signal()
 
     def costruisci(self) -> None:
         lay = QVBoxLayout(self)
@@ -363,6 +365,23 @@ class VistaImpostazioni(VistaBase):
         sc_icone.aggiungi_layout(griglia_stili)
         lay.addWidget(sc_icone)
 
+        sc_lingua = Scheda("Lingua")
+        self.gruppo_lingua = QButtonGroup(self)
+        self.pulsanti_lingua: dict[str, QPushButton] = {}
+        griglia_lingue = QGridLayout()
+        griglia_lingue.setSpacing(8)
+        for i, (codice, nome) in enumerate(LINGUE.items()):
+            b = QPushButton(nome)
+            b.setObjectName("Segmento")
+            b.setCheckable(True)
+            b.setMinimumWidth(104)
+            self.gruppo_lingua.addButton(b, i)
+            self.pulsanti_lingua[codice] = b
+            griglia_lingue.addWidget(b, i // 5, i % 5)
+        griglia_lingue.setColumnStretch(5, 1)
+        sc_lingua.aggiungi_layout(griglia_lingue)
+        lay.addWidget(sc_lingua)
+
         sc_testo = Scheda("Dimensione del testo")
         sc_testo.setToolTip("Ingrandisce testi e comandi di tutta l'applicazione")
         self.gruppo_scala = QButtonGroup(self)
@@ -390,6 +409,7 @@ class VistaImpostazioni(VistaBase):
         self.gruppo_tema.idClicked.connect(self._imposta_tema)
         self.gruppo_accento.idClicked.connect(self._imposta_accento)
         self.gruppo_stile.idClicked.connect(self._imposta_stile_icone)
+        self.gruppo_lingua.idClicked.connect(self._imposta_lingua)
         self.gruppo_scala.idClicked.connect(self._imposta_scala)
         self.cmb_valuta.currentTextChanged.connect(self._imposta_valuta)
         return w
@@ -505,6 +525,12 @@ class VistaImpostazioni(VistaBase):
                 f"background: {tinta}; color: #ffffff; border: 2px solid {bordo}; "
                 f"font-weight: {'700' if scelto else '500'};")
         self.gruppo_accento.blockSignals(False)
+
+        scelta_lingua = self.db.leggi("lingua", LINGUA_PREDEFINITA)
+        self.gruppo_lingua.blockSignals(True)
+        for codice, pulsante in self.pulsanti_lingua.items():
+            pulsante.setChecked(codice == scelta_lingua)
+        self.gruppo_lingua.blockSignals(False)
 
         stile_icone = self.db.leggi("stile_icone", STILE_PREDEFINITO)
         self.gruppo_stile.blockSignals(True)
@@ -834,6 +860,13 @@ class VistaImpostazioni(VistaBase):
         self.db.imposta("accento", nome)
         self.tema_cambiato.emit(self.db.leggi("tema", "scuro"))
         self._esito(f"Colore principale: {nome}.")
+
+    def _imposta_lingua(self, indice: int) -> None:
+        codice = list(LINGUE)[indice]
+        self.db.imposta("lingua", codice)
+        imposta_lingua(codice)
+        self.lingua_cambiata.emit()
+        self._esito(f"{LINGUE[codice]}")
 
     def _imposta_stile_icone(self, indice: int) -> None:
         nome = list(STILI)[indice]

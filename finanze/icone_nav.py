@@ -15,15 +15,14 @@ from PySide6.QtGui import (QColor, QIcon, QPainter, QPainterPath, QPen,
 LATO = 20
 
 # Stili disponibili: spessore del tratto e riempimento delle forme chiuse
+# Ogni stile è una famiglia di disegni a sé: cambia il segno, non lo spessore.
 # nome -> (spessore del tratto, opacità del riempimento 0-255)
 STILI = {
     "sottile": (1.25, 0),
-    "medio": (1.7, 0),
-    "spesso": (2.3, 0),
-    "tenue": (1.6, 70),
-    "pieno": (1.4, 255),
+    "pieno": (1.0, 255),
+    "geometrico": (1.9, 0),
 }
-STILE_PREDEFINITO = "medio"
+STILE_PREDEFINITO = "sottile"
 
 
 def _fattore_schermo() -> float:
@@ -182,7 +181,9 @@ def _pixmap(nome: str, colore: str, lato: int = LATO,
     pixmap.setDevicePixelRatio(dpr)
     p = _pittore(pixmap, colore, stile, dpr)
     margine = lato * 0.16
-    DISEGNI[nome](p, QRectF(margine, margine, lato - 2 * margine, lato - 2 * margine))
+    famiglia = FAMIGLIE.get(stile, FAMIGLIE[STILE_PREDEFINITO])
+    famiglia[nome](p, QRectF(margine, margine,
+                             lato - 2 * margine, lato - 2 * margine))
     p.end()
     return pixmap
 
@@ -242,3 +243,241 @@ def anteprima_stile(stile: str, colore: str, lato: int = 19,
         p.drawPixmap(x, y, _pixmap(nome, colore, lato, stile))
     p.end()
     return tela
+
+
+# ---------------------------------------------------------------------------
+# Famiglia «pieno»: sagome compatte, con metafore diverse da quelle lineari
+# ---------------------------------------------------------------------------
+
+def _p_cruscotto(p: QPainter, r: QRectF) -> None:
+    """Tachimetro: arco pieno con lancetta."""
+    p.setBrush(p.pen().color())
+    arco = QRectF(r.left(), r.top() + r.height() * 0.1,
+                  r.width(), r.height() * 1.25)
+    strada = QPainterPath()
+    strada.moveTo(arco.center())
+    strada.arcTo(arco, 20, 140)
+    strada.closeSubpath()
+    p.drawPath(strada)
+    penna = QPen(p.pen())
+    penna.setWidthF(2.0)
+    p.setPen(penna)
+    centro = QPointF(r.center().x(), r.center().y() + r.height() * 0.22)
+    p.drawLine(centro, QPointF(r.center().x() + r.width() * 0.3,
+                               r.top() + r.height() * 0.08))
+
+
+def _p_movimenti(p: QPainter, r: QRectF) -> None:
+    """Due frecce affiancate: entrate che salgono, uscite che scendono."""
+    p.setBrush(p.pen().color())
+    larghezza = r.width() * 0.3
+    for i, verso in enumerate((-1, 1)):
+        x = r.left() + i * (r.width() - larghezza)
+        alto = r.top() if verso < 0 else r.top() + r.height() * 0.3
+        gambo = QRectF(x + larghezza * 0.3, alto + r.height() * 0.22,
+                       larghezza * 0.4, r.height() * 0.48)
+        p.drawRect(gambo)
+        punta = QPainterPath()
+        y = alto if verso < 0 else alto + r.height() * 0.7
+        punta.moveTo(x + larghezza / 2, y)
+        punta.lineTo(x, y + verso * -r.height() * 0.28)
+        punta.lineTo(x + larghezza, y + verso * -r.height() * 0.28)
+        punta.closeSubpath()
+        p.fillPath(punta, p.pen().color())
+
+
+def _p_budget(p: QPainter, r: QRectF) -> None:
+    """Portafoglio: sagoma piena con la chiusura ritagliata."""
+    sagoma = QPainterPath()
+    sagoma.setFillRule(Qt.OddEvenFill)
+    sagoma.addRoundedRect(
+        QRectF(r.left(), r.top() + r.height() * 0.16,
+               r.width(), r.height() * 0.7), 3, 3)
+    sagoma.addEllipse(QPointF(r.right() - r.width() * 0.26, r.center().y()),
+                      r.width() * 0.1, r.width() * 0.1)
+    p.fillPath(sagoma, p.pen().color())
+
+
+def _p_obiettivi(p: QPainter, r: QRectF) -> None:
+    """Bandierina su asta."""
+    penna = QPen(p.pen()); penna.setWidthF(1.8); p.setPen(penna)
+    asta = r.left() + r.width() * 0.2
+    p.drawLine(QPointF(asta, r.top()), QPointF(asta, r.bottom()))
+    drappo = QPainterPath()
+    drappo.moveTo(asta, r.top() + r.height() * 0.06)
+    drappo.lineTo(r.right(), r.top() + r.height() * 0.22)
+    drappo.lineTo(asta, r.top() + r.height() * 0.42)
+    drappo.closeSubpath()
+    p.fillPath(drappo, p.pen().color())
+
+
+def _p_ricorrenti(p: QPainter, r: QRectF) -> None:
+    """Orologio: quadrante pieno con le lancette ritagliate."""
+    quadrante = QPainterPath()
+    quadrante.setFillRule(Qt.OddEvenFill)
+    quadrante.addEllipse(r.center(), r.width() / 2, r.height() / 2)
+    c = r.center()
+    spessore = max(1.0, r.width() * 0.08)
+    quadrante.addRect(QRectF(c.x() - spessore / 2, c.y() - r.height() * 0.3,
+                             spessore, r.height() * 0.34))
+    quadrante.addRect(QRectF(c.x() - spessore / 2, c.y() - spessore / 2,
+                             r.width() * 0.3, spessore))
+    p.fillPath(quadrante, p.pen().color())
+
+
+def _p_rapporti(p: QPainter, r: QRectF) -> None:
+    """Torta a spicchi."""
+    p.setBrush(p.pen().color())
+    fetta = QPainterPath()
+    fetta.moveTo(r.center())
+    fetta.arcTo(QRectF(r), 60, 300)
+    fetta.closeSubpath()
+    p.drawPath(fetta)
+
+
+def _p_strumenti(p: QPainter, r: QRectF) -> None:
+    """Chiave inglese."""
+    penna = QPen(p.pen()); penna.setWidthF(3.4); p.setPen(penna)
+    p.setBrush(Qt.NoBrush)
+    p.drawLine(QPointF(r.left() + r.width() * 0.3, r.bottom() - r.height() * 0.18),
+               QPointF(r.right() - r.width() * 0.22, r.top() + r.height() * 0.26))
+    penna.setWidthF(1.6); p.setPen(penna)
+    p.setBrush(p.pen().color())
+    testa = QRectF(r.left(), r.top(), r.width() * 0.46, r.height() * 0.46)
+    p.drawEllipse(testa)
+
+
+def _p_impostazioni(p: QPainter, r: QRectF) -> None:
+    """Ingranaggio pieno."""
+    p.setBrush(p.pen().color())
+    centro = r.center()
+    raggio = r.width() / 2
+    denti = QPainterPath()
+    for i in range(8):
+        angolo = math.radians(i * 45)
+        larghezza = math.radians(13)
+        for passo in (-larghezza, larghezza):
+            x = centro.x() + raggio * math.cos(angolo + passo)
+            y = centro.y() - raggio * math.sin(angolo + passo)
+            if i == 0 and passo < 0:
+                denti.moveTo(x, y)
+            else:
+                denti.lineTo(x, y)
+        interno = raggio * 0.72
+        for passo in (larghezza * 1.6, -larghezza * 1.6):
+            x = centro.x() + interno * math.cos(angolo + math.radians(22.5) + passo)
+            y = centro.y() - interno * math.sin(angolo + math.radians(22.5) + passo)
+            denti.lineTo(x, y)
+    denti.closeSubpath()
+    p.fillPath(denti, p.pen().color())
+
+
+# ---------------------------------------------------------------------------
+# Famiglia «geometrico»: segno squadrato, costruito su rette e angoli
+# ---------------------------------------------------------------------------
+
+def _g_cruscotto(p: QPainter, r: QRectF) -> None:
+    """Riquadro diviso in pannelli disuguali."""
+    p.drawRect(r)
+    x = r.left() + r.width() * 0.58
+    p.drawLine(QPointF(x, r.top()), QPointF(x, r.bottom()))
+    p.drawLine(QPointF(x, r.center().y()), QPointF(r.right(), r.center().y()))
+
+
+def _g_movimenti(p: QPainter, r: QRectF) -> None:
+    """Scambio: due frecce squadrate in direzioni opposte."""
+    for i, verso in enumerate((1, -1)):
+        y = r.top() + r.height() * (0.26 if i == 0 else 0.74)
+        p.drawLine(QPointF(r.left(), y), QPointF(r.right(), y))
+        x = r.right() if verso > 0 else r.left()
+        p.drawLine(QPointF(x, y), QPointF(x - verso * r.width() * 0.26,
+                                          y - r.height() * 0.17))
+        p.drawLine(QPointF(x, y), QPointF(x - verso * r.width() * 0.26,
+                                          y + r.height() * 0.17))
+
+
+def _g_budget(p: QPainter, r: QRectF) -> None:
+    """Barra segmentata dentro una cornice."""
+    p.drawRect(QRectF(r.left(), r.top() + r.height() * 0.28,
+                      r.width(), r.height() * 0.44))
+    for frazione in (0.38, 0.62):
+        x = r.left() + r.width() * frazione
+        p.drawLine(QPointF(x, r.top() + r.height() * 0.28),
+                   QPointF(x, r.bottom() - r.height() * 0.28))
+
+
+def _g_obiettivi(p: QPainter, r: QRectF) -> None:
+    """Rombi concentrici."""
+    for fattore in (1.0, 0.45):
+        rombo = QPainterPath()
+        mx, my = r.width() / 2 * fattore, r.height() / 2 * fattore
+        c = r.center()
+        rombo.moveTo(c.x(), c.y() - my)
+        rombo.lineTo(c.x() + mx, c.y())
+        rombo.lineTo(c.x(), c.y() + my)
+        rombo.lineTo(c.x() - mx, c.y())
+        rombo.closeSubpath()
+        p.drawPath(rombo)
+
+
+def _g_ricorrenti(p: QPainter, r: QRectF) -> None:
+    """Percorso quadrato che torna su sé stesso."""
+    p.drawRect(r)
+    p.drawLine(QPointF(r.center().x(), r.top()),
+               QPointF(r.center().x(), r.center().y()))
+    p.drawLine(QPointF(r.center().x(), r.center().y()),
+               QPointF(r.right(), r.center().y()))
+
+
+def _g_rapporti(p: QPainter, r: QRectF) -> None:
+    """Spezzata su assi."""
+    p.drawLine(QPointF(r.left(), r.top()), QPointF(r.left(), r.bottom()))
+    p.drawLine(QPointF(r.left(), r.bottom()), QPointF(r.right(), r.bottom()))
+    punti = [(0.12, 0.66), (0.42, 0.3), (0.66, 0.5), (0.95, 0.12)]
+    precedente = None
+    for fx, fy in punti:
+        corrente = QPointF(r.left() + r.width() * fx, r.top() + r.height() * fy)
+        if precedente is not None:
+            p.drawLine(precedente, corrente)
+        precedente = corrente
+
+
+def _g_strumenti(p: QPainter, r: QRectF) -> None:
+    """Squadra da disegno."""
+    squadra = QPainterPath()
+    squadra.moveTo(r.left(), r.top())
+    squadra.lineTo(r.left(), r.bottom())
+    squadra.lineTo(r.right(), r.bottom())
+    squadra.closeSubpath()
+    p.drawPath(squadra)
+    p.drawLine(QPointF(r.left() + r.width() * 0.28, r.bottom()),
+               QPointF(r.left() + r.width() * 0.28, r.bottom() - r.height() * 0.2))
+    p.drawLine(QPointF(r.left() + r.width() * 0.56, r.bottom()),
+               QPointF(r.left() + r.width() * 0.56, r.bottom() - r.height() * 0.2))
+
+
+def _g_impostazioni(p: QPainter, r: QRectF) -> None:
+    """Interruttori a levetta squadrati."""
+    for i, posizione in enumerate((0.0, 0.52)):
+        y = r.top() + r.height() * (0.2 + i * 0.46)
+        p.drawRect(QRectF(r.left(), y, r.width(), r.height() * 0.26))
+        maniglia = QRectF(r.left() + r.width() * posizione, y,
+                          r.width() * 0.48, r.height() * 0.26)
+        p.fillRect(maniglia, p.pen().color())
+
+
+FAMIGLIE = {
+    "sottile": DISEGNI,
+    "pieno": {
+        "cruscotto": _p_cruscotto, "movimenti": _p_movimenti,
+        "budget": _p_budget, "obiettivi": _p_obiettivi,
+        "ricorrenti": _p_ricorrenti, "rapporti": _p_rapporti,
+        "strumenti": _p_strumenti, "impostazioni": _p_impostazioni,
+    },
+    "geometrico": {
+        "cruscotto": _g_cruscotto, "movimenti": _g_movimenti,
+        "budget": _g_budget, "obiettivi": _g_obiettivi,
+        "ricorrenti": _g_ricorrenti, "rapporti": _g_rapporti,
+        "strumenti": _g_strumenti, "impostazioni": _g_impostazioni,
+    },
+}
