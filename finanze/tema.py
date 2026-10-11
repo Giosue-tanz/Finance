@@ -165,6 +165,7 @@ def foglio_stile(c: dict, scala: float = 1.0,
                               letter-spacing: 0.4px; }}
     QLabel#ValoreScheda {{ font-size: {p(23)}; font-weight: 700; }}
     QLabel#NotaScheda {{ color: {c['testo2']}; font-size: {p(11)}; }}
+    QLabel#TitoloRiga {{ font-size: {p(12.5)}; font-weight: 600; }}
     QLabel#Sezione {{ font-size: {p(15)}; font-weight: 700; padding: 2px 0; }}
 
     QPushButton {{

@@ -5,13 +5,19 @@ from PySide6.QtCore import QDate, QEvent, QModelIndex, QObject, Qt
 from PySide6.QtGui import QFont, QFontMetrics, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QComboBox, QDateEdit, QDialog, QDialogButtonBox,
                                QDoubleSpinBox, QFormLayout, QFrame, QHBoxLayout,
-                               QLabel, QLineEdit, QPushButton, QSizePolicy,
-                               QSpinBox, QVBoxLayout, QWidget)
+                               QLabel, QLineEdit, QProgressBar, QPushButton,
+                               QSizePolicy, QSpinBox, QVBoxLayout, QWidget)
 
 from .grafici import Sparkline
 from .icone import etichetta_categoria, solo_nome
 from .utils import euro
 from .lingue import t
+from .tema import trasparente
+
+
+def _velo(colore: str) -> str:
+    """Sfondo appena accennato del simbolo, nella tinta della riga."""
+    return trasparente(colore, 0.16)
 
 
 class Scheda(QFrame):
@@ -120,6 +126,98 @@ class SchedaStat(Scheda):
     def imposta(self, valore: float | str, nota: str = "", valuta: str = "€",
                 serie: list[float] | None = None) -> None:
         self.contenuto.imposta(valore, nota, valuta, serie)
+
+
+class RigaMisura(QWidget):
+    """Riga di un elenco con barra: simbolo, due testi a sinistra, due a destra.
+
+    La usano il saldo dei conti e il budget, così i due riquadri hanno lo
+    stesso ritmo: simbolo e titolo allineati a sinistra, importo e nota
+    allineati a destra sulla stessa base, barra sottile a chiudere la riga.
+    """
+
+    LATO_SIMBOLO = 30
+    ALTEZZA_BARRA = 5
+
+    def __init__(self, colori: dict, simbolo: str = "", titolo: str = "",
+                 sottotitolo: str = "", valore: str = "", nota: str = "",
+                 quota: int = 0, colore: str = "", parent=None):
+        super().__init__(parent)
+        self.c = colori
+        colore = colore or colori["accento"]
+        self._titolo = titolo
+        self._sottotitolo = sottotitolo
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(7)
+
+        alto = QHBoxLayout()
+        alto.setContentsMargins(0, 0, 0, 0)
+        alto.setSpacing(10)
+
+        # il posto del simbolo c'è sempre, anche vuoto: così i titoli di righe
+        # diverse restano incolonnati
+        self.simbolo = QLabel(simbolo)
+        self.simbolo.setAlignment(Qt.AlignCenter)
+        self.simbolo.setFixedSize(self.LATO_SIMBOLO, self.LATO_SIMBOLO)
+        self.simbolo.setStyleSheet(
+            (f"background: {_velo(colore)}; " if simbolo else "")
+            + f"border-radius: {self.LATO_SIMBOLO // 2}px; font-size: 15px;")
+        alto.addWidget(self.simbolo, 0, Qt.AlignVCenter)
+
+        self.et_titolo = QLabel(titolo)
+        self.et_titolo.setObjectName("TitoloRiga")
+        self.et_sotto = QLabel(sottotitolo)
+        self.et_sotto.setObjectName("NotaScheda")
+        # i testi lunghi non devono imporre la larghezza della riga: si accorciano
+        for et in (self.et_titolo, self.et_sotto):
+            et.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+        sinistra = QVBoxLayout()
+        sinistra.setContentsMargins(0, 0, 0, 0)
+        sinistra.setSpacing(1)
+        sinistra.addWidget(self.et_titolo)
+        sinistra.addWidget(self.et_sotto)
+        alto.addLayout(sinistra, 1)
+
+        self.et_valore = QLabel(valore)
+        self.et_valore.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self.et_valore.setStyleSheet(f"color: {colore}; font-weight: 700;")
+        self.et_nota = QLabel(nota)
+        self.et_nota.setObjectName("NotaScheda")
+        self.et_nota.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        destra = QVBoxLayout()
+        destra.setContentsMargins(0, 0, 0, 0)
+        destra.setSpacing(1)
+        destra.addWidget(self.et_valore)
+        destra.addWidget(self.et_nota)
+        alto.addLayout(destra, 0)
+
+        self.barra = QProgressBar()
+        self.barra.setRange(0, 100)
+        self.barra.setValue(max(0, min(100, quota)))
+        self.barra.setTextVisible(False)
+        self.barra.setFixedHeight(self.ALTEZZA_BARRA)
+        raggio = self.ALTEZZA_BARRA // 2 + 1
+        self.barra.setStyleSheet(
+            f"QProgressBar {{ background: {colori['pannello2']}; border: none;"
+            f" border-radius: {raggio}px; }}"
+            f"QProgressBar::chunk {{ background: {colore};"
+            f" border-radius: {raggio}px; }}")
+
+        lay.addLayout(alto)
+        lay.addWidget(self.barra)
+
+    def resizeEvent(self, ev):
+        """I testi lunghi si accorciano con i puntini invece di spingere l'importo."""
+        super().resizeEvent(ev)
+        spazio = max(40, self.width() - self.LATO_SIMBOLO - 26
+                     - max(self.et_valore.sizeHint().width(),
+                           self.et_nota.sizeHint().width()))
+        for etichetta_, testo in ((self.et_titolo, self._titolo),
+                                  (self.et_sotto, self._sottotitolo)):
+            etichetta_.setText(QFontMetrics(etichetta_.font()).elidedText(
+                testo, Qt.ElideRight, spazio))
 
 
 def riga(*widgets, spaziatura: int = 10) -> QHBoxLayout:

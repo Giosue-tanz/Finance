@@ -10,11 +10,12 @@ from datetime import date, timedelta
 
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QAction, QColor
-from PySide6.QtWidgets import (QHBoxLayout, QLabel, QMenu, QProgressBar,
-                               QPushButton, QScrollArea, QTableWidget,
-                               QTableWidgetItem, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QHeaderView, QMenu, QPushButton, QScrollArea,
+                               QTableWidget, QTableWidgetItem, QVBoxLayout,
+                               QWidget)
 
-from ..componenti import ContenutoStat, abilita_deselezione, etichetta, riga
+from ..componenti import (ContenutoStat, RigaMisura, abilita_deselezione,
+                           etichetta, riga)
 from ..grafici import GraficoBarre, GraficoCiambella, GraficoLinea
 from ..icone import etichetta_categoria
 from ..sezioni import ContenitoreSezioni, Sezione
@@ -154,9 +155,18 @@ class VistaCruscotto(VistaBase):
         self.tab.setAlternatingRowColors(True)
         self.tab.setMinimumHeight(60)
         h = self.tab.horizontalHeader()
-        h.setStretchLastSection(True)
-        h.resizeSection(0, 110); h.resizeSection(1, 280)
-        h.resizeSection(2, 180); h.resizeSection(3, 140)
+        h.setStretchLastSection(False)
+        # la descrizione si prende lo spazio avanzato, le altre quello che serve
+        for colonna, modo in ((0, QHeaderView.ResizeToContents),
+                              (1, QHeaderView.Stretch),
+                              (2, QHeaderView.ResizeToContents),
+                              (3, QHeaderView.ResizeToContents),
+                              (4, QHeaderView.ResizeToContents)):
+            h.setSectionResizeMode(colonna, modo)
+        for colonna in (0, 2, 3, 4):
+            self.tab.horizontalHeaderItem(colonna).setTextAlignment(
+                Qt.AlignRight | Qt.AlignVCenter if colonna == 4
+                else Qt.AlignLeft | Qt.AlignVCenter)
         abilita_deselezione(self.tab)
         self._aggiungi("ultimi", self.tab)
 
@@ -398,13 +408,7 @@ class VistaCruscotto(VistaBase):
         L'elenco si ricostruisce a ogni aggiornamento: i conti creati dalle
         impostazioni compaiono qui senza altri passaggi.
         """
-        while self.lay_conti.count():
-            item = self.lay_conti.takeAt(0)
-            w = item.widget()
-            if w is not None:
-                w.setParent(None)
-                w.deleteLater()
-
+        self._svuota(self.lay_conti)
         conti = self.db.saldi_conti()
         if not conti:
             self.lay_conti.addWidget(etichetta(t("Nessun conto registrato."),
@@ -417,35 +421,16 @@ class VistaCruscotto(VistaBase):
         positivi = sum(s for _, _, s in conti if s > 0)
         for nome, tipo, saldo in conti:
             quota = int(round(saldo / positivi * 100)) if positivi > 0 and saldo > 0 else 0
-            colore = self.c["accento"] if saldo >= 0 else self.c["uscita"]
-
-            blocco = QWidget()
-            lv = QVBoxLayout(blocco)
-            lv.setContentsMargins(0, 0, 0, 0); lv.setSpacing(3)
-
-            testa = QHBoxLayout()
-            titolo = QLabel(f"{ICONE_CONTO.get(tipo, ICONE_CONTO['Altro'])}  {nome}")
-            valore = QLabel(euro(saldo, v))
-            valore.setStyleSheet(f"color: {colore}; font-weight: 600;")
-            testa.addWidget(titolo); testa.addStretch(1); testa.addWidget(valore)
-
-            piede = QHBoxLayout()
-            dettaglio = QLabel(t(tipo))
-            dettaglio.setObjectName("NotaScheda")
-            peso = QLabel(f"{quota}%" if saldo > 0 else t("in rosso"))
-            peso.setObjectName("NotaScheda")
-            piede.addWidget(dettaglio); piede.addStretch(1); piede.addWidget(peso)
-
-            barra = QProgressBar()
-            barra.setRange(0, 100)
-            barra.setValue(quota if saldo > 0 else 100)
-            barra.setTextVisible(False)
-            barra.setFixedHeight(6)
-            barra.setStyleSheet(
-                f"QProgressBar::chunk {{ background: {colore}; border-radius: 3px; }}")
-
-            lv.addLayout(testa); lv.addWidget(barra); lv.addLayout(piede)
-            self.lay_conti.addWidget(blocco)
+            in_rosso = saldo < 0
+            self.lay_conti.addWidget(RigaMisura(
+                self.c,
+                simbolo=ICONE_CONTO.get(tipo, ICONE_CONTO["Altro"]),
+                titolo=nome,
+                sottotitolo=t(tipo),
+                valore=euro(saldo, v),
+                nota=t("in rosso") if in_rosso else t("%d%% del totale") % quota,
+                quota=100 if in_rosso else quota,
+                colore=self.c["uscita"] if in_rosso else self.c["accento"]))
         self.lay_conti.addStretch(1)
 
     def _aggiorna_budget_sezione(self, icone: dict) -> None:
@@ -464,14 +449,9 @@ class VistaCruscotto(VistaBase):
         return f"{freccia} {abs(delta):.0f}% rispetto {riferimento}"
 
     def _aggiorna_budget(self, dal: str, al: str, icone: dict) -> None:
-        while self.lay_budget.count():
-            item = self.lay_budget.takeAt(0)
-            w = item.widget()
-            if w is not None:
-                w.setParent(None)
-                w.deleteLater()
-
-        budget = self.db.query("SELECT * FROM budget WHERE mensile > 0 ORDER BY mensile DESC")
+        self._svuota(self.lay_budget)
+        budget = self.db.query(
+            "SELECT * FROM budget WHERE mensile > 0 ORDER BY mensile DESC")
         if not budget:
             self.lay_budget.addWidget(etichetta(t("Nessun budget impostato."),
                                                 "NotaScheda"))
@@ -487,21 +467,25 @@ class VistaCruscotto(VistaBase):
             quota = min(100, int(speso / limite * 100)) if limite else 0
             colore = (self.c["entrata"] if quota < 75 else
                       self.c["attenzione"] if quota < 100 else self.c["uscita"])
-            blocco = QWidget()
-            lv = QVBoxLayout(blocco)
-            lv.setContentsMargins(0, 0, 0, 0); lv.setSpacing(3)
-            testa = QHBoxLayout()
-            nome = QLabel(etichetta_categoria(b["categoria"], icone.get(b["categoria"])))
-            valore = QLabel(f"{euro(speso, self.valuta)} / {euro(limite, self.valuta)}")
-            valore.setObjectName("NotaScheda")
-            testa.addWidget(nome); testa.addStretch(1); testa.addWidget(valore)
-            barra = QProgressBar()
-            barra.setRange(0, 100); barra.setValue(quota)
-            barra.setStyleSheet(
-                f"QProgressBar::chunk {{ background: {colore}; border-radius: 7px; }}")
-            lv.addLayout(testa); lv.addWidget(barra)
-            self.lay_budget.addWidget(blocco)
+            self.lay_budget.addWidget(RigaMisura(
+                self.c,
+                simbolo=icone.get(b["categoria"], ""),
+                titolo=b["categoria"],
+                sottotitolo=t("%d%% del budget") % quota,
+                valore=euro(speso, self.valuta),
+                nota=t("di %s") % euro(limite, self.valuta),
+                quota=quota, colore=colore))
         self.lay_budget.addStretch(1)
+
+    @staticmethod
+    def _svuota(lay) -> None:
+        """Toglie tutto da un contenitore prima di ricostruirne il contenuto."""
+        while lay.count():
+            item = lay.takeAt(0)
+            w = item.widget()
+            if w is not None:
+                w.setParent(None)
+                w.deleteLater()
 
     def _aggiorna_tabella(self, icone: dict) -> None:
         dal, al = intervallo(self._periodo("ultimi"))
