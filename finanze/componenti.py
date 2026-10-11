@@ -144,6 +144,7 @@ class RigaMisura(QWidget):
                  quota: int = 0, colore: str = "", parent=None):
         super().__init__(parent)
         self.c = colori
+        self.setObjectName("ContenutoSezione")   # niente grigio dentro la scheda
         colore = colore or colori["accento"]
         self._titolo = titolo
         self._sottotitolo = sottotitolo

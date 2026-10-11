@@ -130,7 +130,10 @@ def foglio_stile(c: dict, scala: float = 1.0,
                      "Source Han Sans SC", "WenQuanYi Micro Hei", sans-serif;
         font-size: {p(13)};
     }}
-    QWidget {{ background: {c['fondo']}; color: {c['testo']}; }}
+    /* solo le finestre portano il fondo: così nessun contenitore si trascina
+       il grigio dentro le schede bianche */
+    QWidget {{ color: {c['testo']}; }}
+    QMainWindow, QDialog {{ background: {c['fondo']}; }}
     QLabel, QCheckBox, QRadioButton {{ background: transparent; }}
 
     #Barra {{ background: {c['pannello']}; border-right: 1px solid {c['bordo']}; }}
@@ -159,6 +162,10 @@ def foglio_stile(c: dict, scala: float = 1.0,
     QFrame#Scheda {{
         background: {c['pannello']}; border: 1px solid {c['bordo']}; border-radius: 14px;
     }}
+    /* dentro una scheda il fondo è quello della scheda: i contenuti non
+       devono riportarsi dietro il grigio della finestra */
+    QWidget#Grafico, QWidget#ContenutoSezione, QScrollArea#ContenutoSezione,
+    QScrollArea#ContenutoSezione > QWidget {{ background: transparent; }}
     QFrame#Separatore {{ background: {c['bordo']}; max-height: 1px; border: none; }}
 
     QLabel#EtichettaScheda {{ color: {c['testo2']}; font-size: {p(11.5)}; font-weight: 600;

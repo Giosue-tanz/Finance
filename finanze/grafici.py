@@ -15,6 +15,7 @@ class BaseGrafico(QWidget):
         super().__init__(parent)
         self.c = colori
         self.titolo = titolo
+        self.setObjectName("Grafico")       # il foglio di stile lo lascia trasparente
         self.setMinimumHeight(220)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setMouseTracking(True)
@@ -29,6 +30,17 @@ class BaseGrafico(QWidget):
         p.setRenderHint(QPainter.Antialiasing, True)
         p.setRenderHint(QPainter.TextAntialiasing, True)
         return p
+
+    @staticmethod
+    def _margine_sinistro(p: QPainter, valori, minimo: float = 26.0) -> float:
+        """Larghezza giusta per le etichette dell'asse, senza vuoto a sinistra.
+
+        Con un margine fisso i numeri corti lasciavano una fascia bianca fra il
+        bordo del riquadro e il grafico: qui si misura l'etichetta più larga.
+        """
+        fm = QFontMetrics(p.font())
+        largo = max((fm.horizontalAdvance(compatto(v)) for v in valori), default=0.0)
+        return max(minimo, largo + 10.0)
 
     def _vuoto(self, p: QPainter, messaggio: str = "Nessun dato da mostrare") -> None:
         p.setPen(QColor(self.c["testo2"]))
@@ -65,9 +77,6 @@ class GraficoLinea(BaseGrafico):
             self._vuoto(p); return
 
         compatto_x = self.height() < 150
-        ml, mr, mt, mb = 62, 14, 16, (10 if compatto_x else 30)
-        w, h = self.width(), self.height()
-        area = QRectF(ml, mt, max(10, w - ml - mr), max(10, h - mt - mb))
         valori = [v for _, v in self.punti]
         vmin, vmax = min(valori), max(valori)
         if vmin == vmax:
@@ -76,14 +85,20 @@ class GraficoLinea(BaseGrafico):
         vmin -= margine; vmax += margine
 
         f = QFont(); f.setPointSize(8); p.setFont(f)
+        p.setFont(f)
+        tacche = [vmax - (vmax - vmin) * i / 4 for i in range(5)]
+        ml = self._margine_sinistro(p, tacche)
+        mr, mt, mb = 10, 16, (10 if compatto_x else 30)
+        w, h = self.width(), self.height()
+        area = QRectF(ml, mt, max(10, w - ml - mr), max(10, h - mt - mb))
+
         # griglia + asse Y
-        for i in range(5):
+        for i, val in enumerate(tacche):
             y = area.top() + area.height() * i / 4
-            p.setPen(QPen(QColor(self.c["griglia"]), 1, Qt.DotLine))
+            p.setPen(QPen(QColor(self.c["griglia"]), 1))
             p.drawLine(QPointF(area.left(), y), QPointF(area.right(), y))
-            val = vmax - (vmax - vmin) * i / 4
             p.setPen(QColor(self.c["testo2"]))
-            p.drawText(QRectF(0, y - 9, ml - 8, 18),
+            p.drawText(QRectF(0, y - 9, ml - 10, 18),
                        Qt.AlignRight | Qt.AlignVCenter, compatto(val))
 
         def xy(i: int, v: float) -> QPointF:
@@ -101,21 +116,28 @@ class GraficoLinea(BaseGrafico):
         area_path.closeSubpath()
         grad = QLinearGradient(0, area.top(), 0, area.bottom())
         col = QColor(self.colore)
-        grad.setColorAt(0, QColor(col.red(), col.green(), col.blue(), 110))
-        grad.setColorAt(1, QColor(col.red(), col.green(), col.blue(), 8))
+        grad.setColorAt(0, QColor(col.red(), col.green(), col.blue(), 72))
+        grad.setColorAt(1, QColor(col.red(), col.green(), col.blue(), 0))
         p.setPen(Qt.NoPen); p.setBrush(grad); p.drawPath(area_path)
 
         p.setBrush(Qt.NoBrush)
-        p.setPen(QPen(QColor(self.colore), 2.2))
+        penna = QPen(QColor(self.colore), 2.0)
+        penna.setCapStyle(Qt.RoundCap)
+        penna.setJoinStyle(Qt.RoundJoin)
+        p.setPen(penna)
         p.drawPath(linea)
 
         # punti + etichette X + zone tooltip
         passo = max(1, len(self.punti) // 8)
+        # con tanti punti i pallini diventano una collana: si tengono solo
+        # quando sono pochi, altrimenti resta la sola linea
+        pallini = len(self.punti) <= 14
         p.setPen(Qt.NoPen)
         for i, (etic, v) in enumerate(self.punti):
             pt = xy(i, v)
-            p.setBrush(QColor(self.colore))
-            p.drawEllipse(pt, 3.0, 3.0)
+            if pallini:
+                p.setBrush(QColor(self.colore))
+                p.drawEllipse(pt, 2.6, 2.6)
             self._zone.append((QRectF(pt.x() - 12, area.top(), 24, area.height()),
                                f"{etic}: {euro(v)}"))
             if not compatto_x and (i % passo == 0 or i == len(self.punti) - 1):
@@ -147,20 +169,23 @@ class GraficoBarre(BaseGrafico):
             self._orizzontale(p); return
 
         ridotto = self.height() < 170
-        ml, mr, mt, mb = 62, 14, (12 if ridotto else 34), (10 if ridotto else 32)
-        area = QRectF(ml, mt, max(10, self.width() - ml - mr),
-                      max(10, self.height() - mt - mb))
         massimo = max((max(v) if v else 0) for _, v in self.dati) or 1
         massimo *= 1.15
         f = QFont(); f.setPointSize(8); p.setFont(f)
 
-        for i in range(5):
+        tacche = [massimo - massimo * i / 4 for i in range(5)]
+        ml = self._margine_sinistro(p, tacche)
+        mr, mt, mb = 10, (12 if ridotto else 34), (10 if ridotto else 32)
+        area = QRectF(ml, mt, max(10, self.width() - ml - mr),
+                      max(10, self.height() - mt - mb))
+
+        for i, val in enumerate(tacche):
             y = area.top() + area.height() * i / 4
-            p.setPen(QPen(QColor(self.c["griglia"]), 1, Qt.DotLine))
+            p.setPen(QPen(QColor(self.c["griglia"]), 1))
             p.drawLine(QPointF(area.left(), y), QPointF(area.right(), y))
             p.setPen(QColor(self.c["testo2"]))
-            p.drawText(QRectF(0, y - 9, ml - 8, 18), Qt.AlignRight | Qt.AlignVCenter,
-                       compatto(massimo - massimo * i / 4))
+            p.drawText(QRectF(0, y - 9, ml - 10, 18), Qt.AlignRight | Qt.AlignVCenter,
+                       compatto(val))
 
         # legenda
         x_leg = area.left()
@@ -301,6 +326,7 @@ class Sparkline(QWidget):
 
     def __init__(self, colori: dict, parent=None):
         super().__init__(parent)
+        self.setObjectName("Grafico")     # trasparente dentro le schede
         self.c = colori
         self.valori: list[float] = []
         self.colore = colori["accento"]
