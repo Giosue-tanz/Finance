@@ -247,14 +247,16 @@ class VistaCruscotto(VistaBase):
             self.aggiorna()
 
     def ripristina_predefinita(self) -> None:
+        """Rimette i riquadri al loro posto, senza toccare i periodi scelti.
+
+        Il periodo è una scelta per riquadro: ritoccare la disposizione non
+        deve riportare tutti gli altri al valore di partenza.
+        """
         for azione in self.azioni.values():
             azione.blockSignals(True); azione.setChecked(True); azione.blockSignals(False)
         for sezione in self.contenitore.sezioni.values():
             sezione.show()
         self.contenitore.applica_disposizione(DISPOSIZIONE_PREDEFINITA)
-        for chiave in PERIODI_SEZIONE:
-            self.db.imposta(f"periodo_{chiave}", PERIODI_SEZIONE[chiave][1])
-            self.contenitore.sezioni[chiave].imposta_periodo(self._nome_periodo(chiave))
         QTimer.singleShot(0, self._dimensioni_predefinite)
         self.aggiorna()
 
