@@ -27,6 +27,24 @@ TESTI: dict[str, dict[str, str]] = {
     "Strumenti": {"en": "Tools", "es": "Herramientas", "fr": "Outils", "zh": "工具"},
     "Impostazioni": {"en": "Settings", "es": "Ajustes", "fr": "Réglages", "zh": "设置"},
 
+    # ------------------------------------------------- saldo dei conti
+    "Saldo dei conti": {"en": "Account balances", "es": "Saldo de las cuentas",
+                        "fr": "Solde des comptes", "zh": "账户余额"},
+    "Nessun conto registrato.": {"en": "No accounts yet.",
+                                 "es": "Ninguna cuenta registrada.",
+                                 "fr": "Aucun compte enregistré.",
+                                 "zh": "尚未添加账户。"},
+    "in rosso": {"en": "overdrawn", "es": "en números rojos",
+                 "fr": "à découvert", "zh": "透支"},
+    "Conto corrente": {"en": "Current account", "es": "Cuenta corriente",
+                       "fr": "Compte courant", "zh": "活期账户"},
+    "Contanti": {"en": "Cash", "es": "Efectivo", "fr": "Espèces", "zh": "现金"},
+    "Carta prepagata": {"en": "Prepaid card", "es": "Tarjeta prepago",
+                        "fr": "Carte prépayée", "zh": "预付卡"},
+    "Investimenti": {"en": "Investments", "es": "Inversiones",
+                     "fr": "Placements", "zh": "投资"},
+    "Altro": {"en": "Other", "es": "Otro", "fr": "Autre", "zh": "其他"},
+
     # ------------------------------------------------------ sottotitoli viste
     "Panoramica della tua situazione finanziaria": {
         "en": "An overview of your finances",

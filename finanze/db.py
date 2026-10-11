@@ -258,6 +258,20 @@ class Database:
             (nome,))[0]["s"]
         return base + float(ent) - float(usc)
 
+    def saldi_conti(self) -> list[tuple[str, str, float]]:
+        """Nome, tipo e saldo attuale di ogni conto, dal più capiente in giù.
+
+        Una sola interrogazione per tutti i conti: l'elenco si allunga da sé
+        quando se ne crea uno nuovo, senza toccare il cruscotto.
+        """
+        righe = self.query(
+            "SELECT c.nome, c.tipo, c.saldo_iniziale + COALESCE(SUM("
+            "  CASE m.tipo WHEN 'entrata' THEN m.importo"
+            "              WHEN 'uscita'  THEN -m.importo END), 0) AS saldo "
+            "FROM conti c LEFT JOIN movimenti m ON m.conto = c.nome "
+            "GROUP BY c.id ORDER BY saldo DESC, c.nome")
+        return [(r["nome"], r["tipo"], float(r["saldo"])) for r in righe]
+
     def totali_periodo(self, dal: str, al: str) -> tuple[float, float]:
         ent = self.query(
             "SELECT COALESCE(SUM(importo),0) s FROM movimenti "

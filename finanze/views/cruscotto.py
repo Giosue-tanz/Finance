@@ -11,8 +11,8 @@ from datetime import date, timedelta
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtWidgets import (QHBoxLayout, QLabel, QMenu, QProgressBar,
-                               QPushButton, QTableWidget, QTableWidgetItem,
-                               QVBoxLayout, QWidget)
+                               QPushButton, QScrollArea, QTableWidget,
+                               QTableWidgetItem, QVBoxLayout, QWidget)
 
 from ..componenti import ContenutoStat, abilita_deselezione, etichetta, riga
 from ..grafici import GraficoBarre, GraficoCiambella, GraficoLinea
@@ -26,7 +26,7 @@ from ..lingue import t
 DISPOSIZIONE_PREDEFINITA = [
     ["saldo", "entrate", "uscite", "risparmio"],
     ["andamento", "ripartizione"],
-    ["mensili", "budget"],
+    ["conti", "mensili", "budget"],
     ["ultimi"],
 ]
 
@@ -38,8 +38,15 @@ TITOLI = {
     "andamento": "Andamento del saldo",
     "ripartizione": "Uscite per categoria",
     "mensili": "Entrate e uscite per mese",
+    "conti": "Saldo dei conti",
     "budget": "Budget",
     "ultimi": "Ultimi movimenti",
+}
+
+# Un simbolo per ogni tipo di conto; «Altro» vale anche per i tipi sconosciuti
+ICONE_CONTO = {
+    "Conto corrente": "🏦", "Contanti": "💵", "Carta prepagata": "💳",
+    "Risparmio": "🐷", "Investimenti": "📈", "Altro": "👛",
 }
 
 # Che cosa può scegliere ogni riquadro e con quale valore si parte
@@ -125,6 +132,18 @@ class VistaCruscotto(VistaBase):
         self.lay_budget.setContentsMargins(0, 0, 0, 0)
         self.lay_budget.setSpacing(9)
         self._aggiungi("budget", self.cont_budget)
+
+        self.cont_conti = QWidget()
+        self.lay_conti = QVBoxLayout(self.cont_conti)
+        self.lay_conti.setContentsMargins(0, 0, 0, 0)
+        self.lay_conti.setSpacing(9)
+        scorri_conti = QScrollArea()
+        scorri_conti.setWidgetResizable(True)
+        scorri_conti.setFrameShape(QScrollArea.NoFrame)
+        scorri_conti.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scorri_conti.setWidget(self.cont_conti)
+        scorri_conti.setMinimumHeight(60)
+        self._aggiungi("conti", scorri_conti)
 
         self.tab = QTableWidget(0, 5)
         self.tab.setHorizontalHeaderLabels(
@@ -262,6 +281,7 @@ class VistaCruscotto(VistaBase):
         self._aggiorna_andamento()
         self._aggiorna_ripartizione(v, colori, icone)
         self._aggiorna_mensili()
+        self._aggiorna_conti(v)
         self._aggiorna_budget_sezione(icone)
         self._aggiorna_tabella(icone)
 
@@ -369,6 +389,62 @@ class VistaCruscotto(VistaBase):
         self.g_barre.imposta_dati(
             [(etichetta_mese(m), [e, u]) for m, e, u in serie],
             [("Entrate", self.c["entrata"]), ("Uscite", self.c["uscita"])])
+
+    def _aggiorna_conti(self, v: str) -> None:
+        """Un blocco per ogni conto, con quanto pesa sul patrimonio.
+
+        L'elenco si ricostruisce a ogni aggiornamento: i conti creati dalle
+        impostazioni compaiono qui senza altri passaggi.
+        """
+        while self.lay_conti.count():
+            item = self.lay_conti.takeAt(0)
+            w = item.widget()
+            if w is not None:
+                w.setParent(None)
+                w.deleteLater()
+
+        conti = self.db.saldi_conti()
+        if not conti:
+            self.lay_conti.addWidget(etichetta(t("Nessun conto registrato."),
+                                               "NotaScheda"))
+            self.lay_conti.addStretch(1)
+            return
+
+        # la quota si misura sui soli saldi positivi: un conto in rosso non
+        # toglie spazio agli altri, mostra solo la propria barra rossa piena
+        positivi = sum(s for _, _, s in conti if s > 0)
+        for nome, tipo, saldo in conti:
+            quota = int(round(saldo / positivi * 100)) if positivi > 0 and saldo > 0 else 0
+            colore = self.c["accento"] if saldo >= 0 else self.c["uscita"]
+
+            blocco = QWidget()
+            lv = QVBoxLayout(blocco)
+            lv.setContentsMargins(0, 0, 0, 0); lv.setSpacing(3)
+
+            testa = QHBoxLayout()
+            titolo = QLabel(f"{ICONE_CONTO.get(tipo, ICONE_CONTO['Altro'])}  {nome}")
+            valore = QLabel(euro(saldo, v))
+            valore.setStyleSheet(f"color: {colore}; font-weight: 600;")
+            testa.addWidget(titolo); testa.addStretch(1); testa.addWidget(valore)
+
+            piede = QHBoxLayout()
+            dettaglio = QLabel(t(tipo))
+            dettaglio.setObjectName("NotaScheda")
+            peso = QLabel(f"{quota}%" if saldo > 0 else t("in rosso"))
+            peso.setObjectName("NotaScheda")
+            piede.addWidget(dettaglio); piede.addStretch(1); piede.addWidget(peso)
+
+            barra = QProgressBar()
+            barra.setRange(0, 100)
+            barra.setValue(quota if saldo > 0 else 100)
+            barra.setTextVisible(False)
+            barra.setFixedHeight(6)
+            barra.setStyleSheet(
+                f"QProgressBar::chunk {{ background: {colore}; border-radius: 3px; }}")
+
+            lv.addLayout(testa); lv.addWidget(barra); lv.addLayout(piede)
+            self.lay_conti.addWidget(blocco)
+        self.lay_conti.addStretch(1)
 
     def _aggiorna_budget_sezione(self, icone: dict) -> None:
         dal, al = (mese_corrente() if self._periodo("budget") == "mese"
