@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QComboBox, QDateEdit, QHeaderV
                                QLabel, QTableWidget, QTableWidgetItem, QVBoxLayout)
 
 from ..componenti import (Scheda, SchedaStat, abilita_deselezione, etichetta,
-                          riga)
+                           riga, stile_tabella)
 from ..grafici import GraficoBarre, GraficoCiambella, GraficoLinea
 from ..icone import etichetta_categoria
 from ..utils import (anno_corrente, data_it, etichetta_mese, euro, mese_corrente,
@@ -72,7 +72,7 @@ class VistaRapporti(VistaBase):
         self.tab = QTableWidget(0, 6)
         self.tab.setHorizontalHeaderLabels(
             [t("Categoria"), t("Tipo"), t("Movimenti"), t("Totale"), t("Media"), t("Quota")])
-        self.tab.verticalHeader().setVisible(False)
+        stile_tabella(self.tab)
         self.tab.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tab.setSortingEnabled(True)
         self.tab.setMinimumHeight(320)
@@ -87,7 +87,7 @@ class VistaRapporti(VistaBase):
         self.tab_mesi = QTableWidget(0, 5)
         self.tab_mesi.setHorizontalHeaderLabels(
             [t("Mese"), t("Entrate"), t("Uscite"), t("Risparmio"), t("Tasso di risparmio")])
-        self.tab_mesi.verticalHeader().setVisible(False)
+        stile_tabella(self.tab_mesi)
         self.tab_mesi.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tab_mesi.setMinimumHeight(280)
         hm = self.tab_mesi.horizontalHeader()

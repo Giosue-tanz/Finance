@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox,
 
 from ..categorie import DialogoNuovaCategoria
 from ..componenti import (DialogoMovimento, Scheda, abilita_deselezione,
-                          etichetta, riga)
+                           etichetta, riga, stile_tabella)
 from ..icone import etichetta_categoria, solo_nome
 from ..utils import (anno_corrente, data_it, esporta_csv, euro, importa_csv,
                      mese_corrente)
@@ -238,12 +238,11 @@ class VistaMovimenti(VistaBase):
     def _tabella(self) -> QTableWidget:
         self.tab = QTableWidget(0, len(COLONNE))
         self.tab.setHorizontalHeaderLabels(COLONNE)
-        self.tab.verticalHeader().setVisible(False)
+        stile_tabella(self.tab)
         self.tab.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tab.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tab.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.tab.setSortingEnabled(True)
-        self.tab.setAlternatingRowColors(True)
         self.tab.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tab.customContextMenuRequested.connect(self._menu_contestuale)
         self.tab.doubleClicked.connect(self.modifica)

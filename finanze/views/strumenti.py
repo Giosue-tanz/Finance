@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QComboBox, QDoubleSpinBox,
                                QSpinBox, QTabWidget, QTableWidget, QTableWidgetItem,
                                QVBoxLayout, QWidget)
 
-from ..componenti import Scheda, etichetta, riga
+from ..componenti import Scheda, etichetta, riga, stile_tabella
 from ..grafici import GraficoLinea
 from ..utils import euro
 from . import VistaBase
@@ -83,7 +83,7 @@ class VistaStrumenti(VistaBase):
         self.p_tab = QTableWidget(0, 5)
         self.p_tab.setHorizontalHeaderLabels(
             [t("Rata"), t("Quota capitale"), t("Quota interessi"), t("Rata totale"), t("Debito residuo")])
-        self.p_tab.verticalHeader().setVisible(False)
+        stile_tabella(self.p_tab)
         self.p_tab.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.p_tab.setMinimumHeight(300)
         self.p_tab.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -237,7 +237,7 @@ class VistaStrumenti(VistaBase):
         self.r_tab = QTableWidget(0, 4)
         self.r_tab.setHorizontalHeaderLabels(
             [t("Voce"), t("Quota"), t("Importo consigliato"), t("Speso realmente nel mese")])
-        self.r_tab.verticalHeader().setVisible(False)
+        stile_tabella(self.r_tab)
         self.r_tab.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.r_tab.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.r_tab.setMinimumHeight(190)

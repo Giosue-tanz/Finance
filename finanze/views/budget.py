@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox,
                                QVBoxLayout, QWidget)
 
 from ..componenti import (Scheda, SchedaStat, abilita_deselezione, etichetta,
-                          riga)
+                           riga, stile_tabella)
 from ..grafici import GraficoBarre
 from ..icone import etichetta_categoria
 from ..utils import euro, giorni_mese, mese_corrente
@@ -187,11 +187,10 @@ class VistaBudget(VistaBase):
         self.tab.setHorizontalHeaderLabels(
             [t("Categoria"), t("Limite"), t("Speso"), t("Residuo"), t("Utilizzo"),
              t("Fine mese (stima)"), t("Stato")])
-        self.tab.verticalHeader().setVisible(False)
+        stile_tabella(self.tab)
         self.tab.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tab.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tab.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.tab.setAlternatingRowColors(True)
         self.tab.setSortingEnabled(True)
         self.tab.setMinimumHeight(110)
         self.tab.setToolTip("Doppio clic per cambiare un limite · Canc per rimuoverlo\n"
@@ -214,7 +213,7 @@ class VistaBudget(VistaBase):
         self.tab_senza = QTableWidget(0, 4)
         self.tab_senza.setHorizontalHeaderLabels(
             [t("Categoria"), t("Speso questo mese"), f"Media {MESI_STORICO} mesi", t("Budget proposto")])
-        self.tab_senza.verticalHeader().setVisible(False)
+        stile_tabella(self.tab_senza)
         self.tab_senza.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tab_senza.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tab_senza.setSelectionMode(QAbstractItemView.SingleSelection)

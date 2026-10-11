@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (QHeaderView, QMenu, QPushButton, QScrollArea,
                                QWidget)
 
 from ..componenti import (ContenutoStat, RigaMisura, abilita_deselezione,
-                           etichetta, riga)
+                           etichetta, riga, stile_tabella)
 from ..grafici import GraficoBarre, GraficoCiambella, GraficoLinea
 from ..icone import etichetta_categoria
 from ..sezioni import ContenitoreSezioni, Sezione
@@ -156,7 +156,6 @@ class VistaCruscotto(VistaBase):
         self.tab.verticalHeader().setVisible(False)
         self.tab.setEditTriggers(QTableWidget.NoEditTriggers)
         self.tab.setSelectionBehavior(QTableWidget.SelectRows)
-        self.tab.setAlternatingRowColors(True)
         self.tab.setMinimumHeight(60)
         h = self.tab.horizontalHeader()
         h.setStretchLastSection(False)
@@ -172,6 +171,7 @@ class VistaCruscotto(VistaBase):
                 Qt.AlignRight | Qt.AlignVCenter if colonna == 4
                 else Qt.AlignLeft | Qt.AlignVCenter)
         abilita_deselezione(self.tab)
+        stile_tabella(self.tab)
         self._aggiungi("ultimi", self.tab)
 
         self.grafici = [self.g_saldo, self.g_torta, self.g_barre]

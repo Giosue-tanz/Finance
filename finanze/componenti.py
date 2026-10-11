@@ -221,6 +221,32 @@ class RigaMisura(QWidget):
                 testo, Qt.ElideRight, spazio))
 
 
+def stile_tabella(tab, altezza_riga: int = 38) -> None:
+    """Aspetto comune a tutte le tabelle dell'applicazione.
+
+    Niente reticolo: le righe si separano con una sottile linea orizzontale e
+    si distinguono per l'aria che le circonda, non per il fondo a righe
+    alternate. L'intestazione è in maiuscoletto spaziato, come le etichette
+    delle schede, e non si colora quando si ordina.
+    """
+    tab.setShowGrid(False)
+    tab.setAlternatingRowColors(False)
+    tab.setWordWrap(False)
+    tab.setTextElideMode(Qt.ElideRight)
+    tab.verticalHeader().setVisible(False)
+    tab.verticalHeader().setDefaultSectionSize(altezza_riga)
+    tab.verticalHeader().setMinimumSectionSize(26)
+
+    testata = tab.horizontalHeader()
+    testata.setHighlightSections(False)
+    testata.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+    testata.setFixedHeight(34)
+    for colonna in range(tab.columnCount()):
+        voce = tab.horizontalHeaderItem(colonna)
+        if voce is not None:
+            voce.setText(voce.text().upper())
+
+
 def riga(*widgets, spaziatura: int = 10) -> QHBoxLayout:
     lay = QHBoxLayout()
     lay.setSpacing(spaziatura)

@@ -217,14 +217,27 @@ def foglio_stile(c: dict, scala: float = 1.0,
 
     QTableWidget, QTableView {{
         background: {c['pannello']}; border: 1px solid {c['bordo']}; border-radius: 12px;
-        gridline-color: {c['griglia']}; selection-background-color: {selezione};
-        selection-color: {c['testo']}; alternate-background-color: {c['pannello2']};
+        gridline-color: transparent; outline: none;
+        selection-background-color: {selezione}; selection-color: {c['testo']};
     }}
+    /* le righe si separano con una linea sottile, non con un reticolo */
+    QTableWidget::item, QTableView::item {{
+        padding: 6px 10px; border: none;
+        border-bottom: 1px solid {c['griglia']};
+    }}
+    QTableWidget::item:selected, QTableView::item:selected {{
+        background: {selezione}; color: {c['testo']};
+    }}
+    QHeaderView {{ background: transparent; border: none; }}
     QHeaderView::section {{
-        background: {c['pannello2']}; color: {c['testo2']}; border: none;
-        border-bottom: 1px solid {c['bordo']}; padding: 9px; font-weight: 600;
+        background: transparent; color: {c['testo2']}; border: none;
+        border-bottom: 1px solid {c['bordo']};
+        padding: 8px 10px; font-weight: 600; font-size: {p(10.5)};
+        letter-spacing: 0.6px;
     }}
-    QTableWidget::item {{ padding: 5px; }}
+    QHeaderView::section:hover {{ color: {c['testo']}; }}
+    QHeaderView::up-arrow, QHeaderView::down-arrow {{ width: 9px; height: 9px; }}
+    QTableCornerButton::section {{ background: transparent; border: none; }}
 
     QProgressBar {{
         background: {c['pannello2']}; border: none; border-radius: 7px;

@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDateEdi
                                QVBoxLayout)
 
 from ..componenti import (Scheda, SchedaStat, abilita_deselezione, etichetta,
-                          riga)
+                           riga, stile_tabella)
 from ..ricorrenze import prossima
 from ..utils import data_it, euro
 from . import VistaBase
@@ -134,7 +134,7 @@ class VistaRicorrenti(VistaBase):
         self.tab.setHorizontalHeaderLabels(
             [t("Descrizione"), t("Tipo"), t("Importo"), t("Categoria"), t("Conto"),
              t("Frequenza"), t("Prossima"), t("Stato")])
-        self.tab.verticalHeader().setVisible(False)
+        stile_tabella(self.tab)
         self.tab.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tab.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tab.setMinimumHeight(340)

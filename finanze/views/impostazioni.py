@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QColorDialog,
                                QTableWidgetItem, QTabWidget, QToolButton,
                                QVBoxLayout, QWidget)
 
-from ..componenti import Scheda, abilita_deselezione, etichetta, riga
+from ..componenti import Scheda, abilita_deselezione, etichetta, riga, stile_tabella
 from ..categorie import BarraNuovaCategoria
 from ..lingue import (LINGUA_PREDEFINITA, LINGUE, alfabeto_disponibile,
                       imposta_lingua, t)
@@ -497,7 +497,6 @@ class VistaImpostazioni(VistaBase):
     @staticmethod
     def _prepara_tabella(tab: QTableWidget, larghezza_prima: int = 300) -> None:
         """Colonne compatte: la prima di larghezza fissa, lo spazio residuo in coda."""
-        tab.verticalHeader().setVisible(False)
         tab.setEditTriggers(QAbstractItemView.NoEditTriggers)
         tab.setSelectionBehavior(QAbstractItemView.SelectRows)
         tab.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -510,6 +509,7 @@ class VistaImpostazioni(VistaBase):
         intestazione.setSectionResizeMode(0, QHeaderView.Interactive)
         intestazione.resizeSection(0, larghezza_prima)
         intestazione.setSectionResizeMode(colonne, QHeaderView.Stretch)
+        stile_tabella(tab)
         abilita_deselezione(tab)
 
     def _riga_selezionata(self, tab: QTableWidget, tabella: str):
