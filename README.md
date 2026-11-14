@@ -1,6 +1,14 @@
 # Finance
 
-![licenza](https://img.shields.io/badge/licenza-MIT-green) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![offline](https://img.shields.io/badge/rete-nessuna-success) ![piattaforma](https://img.shields.io/badge/piattaforma-Linux-orange)
+![licenza](https://img.shields.io/badge/licenza-MIT-green) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![offline](https://img.shields.io/badge/rete-nessuna-success) ![piattaforma](https://img.shields.io/badge/piattaforma-Linux-orange) ![stato](https://img.shields.io/badge/stato-archiviato-lightgrey)
+
+> **Progetto interrotto.** Finance è diventato una delle aree di
+> [Dashboard](https://github.com/Giosue-tanz/Dashboard): stesso impianto
+> grafico, stessa gestione delle finanze, ma dentro un'unica applicazione
+> che tiene insieme anche salute, studio, lavoro, emozioni e abitudini —
+> con un'AI locale che li legge tutti insieme. Questo repository resta
+> online per cronologia e riferimento, ma non riceve più sviluppo: per
+> tutto quello che faceva Finance, e per il resto, si usa Dashboard.
 
 Applicazione desktop nativa per la gestione delle finanze personali.
 **Funziona interamente offline**: nessuna connessione di rete, nessun account,
